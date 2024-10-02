@@ -157,7 +157,7 @@ exports.ClaimInvestment = async (req, res) => {
             where: { user: req.user, read: 'false' },
         })
 
-        return res.json({ status: 200, msg: investment, notis: notifications, unread: unreadnotis })
+        return res.json({ status: 200, msg: 'Investment claim success', invt: investment, notis: notifications, unread: unreadnotis })
     } catch (error) {
         res.json({ status: 500, msg: error.message })
     }

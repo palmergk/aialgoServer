@@ -414,12 +414,12 @@ exports.UpdateProfile = async (req, res) => {
 exports.DeleteAcount = async (req, res) => {
     try {
         const { password } = req.body
-        if (!password) return res.json({ status: 404, msg: `password is required` })
+        if (!password) return res.json({ status: 404, msg: 'Password is required' })
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'Account not found' })
 
-        if (password !== user.password) return res.json({ status: 404, msg: `invalid password` })
+        if (password !== user.password) return res.json({ status: 404, msg: `Invalid password` })
 
         user.account_deletion = 'true'
         await user.save()
