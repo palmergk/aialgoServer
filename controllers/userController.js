@@ -266,7 +266,7 @@ exports.ChangePasswordOnRequest = async (req, res) => {
         const { email, password, confirm_password } = req.body
         if (!email || !password || !confirm_password) return res.json({ status: 404, msg: 'Incomplete request found' })
 
-        if (confirm_password !== password) return res.json({ status: 400, msg: 'Passwords do not match' })
+        if (confirm_password !== password) return res.json({ status: 400, msg: 'Passwords mismatch' })
 
         const findAccount = await User.findOne({ where: { email: email } })
         if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })

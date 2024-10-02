@@ -523,7 +523,7 @@ exports.AdminCreateAccount = async (req, res) => {
             await Notification.create({
                 user: newAdmin.id,
                 title: `welcome ${newAdmin.username}`,
-                content: `Welcome to ${webName} admin, see all users?.`,
+                content: `Welcome to ${webName} admin, see all users?`,
                 URL: '/admin-controls/users',
             })
         }
