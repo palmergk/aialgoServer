@@ -545,11 +545,11 @@ exports.AdminCreateAccount = async (req, res) => {
             order: [['createdAt', 'DESC']],
         })
 
-        const unreadNotifications = await Notification.findAll({
+        const unreadnotis = await Notification.findAll({
             where: { user: req.user, read: 'false' },
         })
 
-        return res.json({ status: 200, msg: `Account created successfully`, notis: notifications, unread: unreadNotifications })
+        return res.json({ status: 200, msg: `Account created successfully`, notis: notifications, unread: unreadnotis })
     } catch (error) {
         return res.json({ status: 400, msg: error.message })
     }
@@ -599,7 +599,7 @@ exports.UpdateUsers = async (req, res) => {
         if (password) {
             const findAdmin = await User.findOne({ where: { id: req.user } })
             if (!findAdmin) return res.json({ status: 400, msg: `Admin not found` })
-            if (password !== findAdmin.password) return res.json({ status: 404, msg: `Invalid password` })
+            if (password !== findAdmin.password) return res.json({ status: 404, msg: `Incorrect password`  })
 
             if (user.role === 'admin') {
                 if (findAdmin.id !== 1) return res.json({ status: 404, msg: `Unauthorized action` })

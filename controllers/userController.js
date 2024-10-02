@@ -197,7 +197,7 @@ exports.LoginAccount = async (req, res) => {
         const findEmail = await User.findOne({ where: { email: email } })
         if (!findEmail) return res.json({ status: 400, msg: `No account belongs to the email` })
 
-        if (password !== findEmail.password) return res.json({ status: 404, msg: `Wrong password entered` })
+        if (password !== findEmail.password) return res.json({ status: 404, msg: `Incorrect password` })
 
         const findIfSuspended = await User.findOne({ where: { id: findEmail.id, suspend: 'true' } })
         if (findIfSuspended) return res.json({ status: 400, msg: `Your account has been suspended, kindly contact support team` })
@@ -419,7 +419,7 @@ exports.DeleteAcount = async (req, res) => {
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'Account not found' })
 
-        if (password !== user.password) return res.json({ status: 404, msg: `Invalid password` })
+        if (password !== user.password) return res.json({ status: 404, msg: `Incorrect password` })
 
         user.account_deletion = 'true'
         await user.save()
