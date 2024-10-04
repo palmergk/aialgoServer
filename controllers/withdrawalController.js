@@ -29,7 +29,7 @@ exports.MakeWithdrawal = async (req, res) => {
         const adminWallet = await AdminWallet.findOne({ where: { crypto_name: crypto, network: network } })
         if (!adminWallet) return res.json({ status: 404, msg: 'Crypto/Network not supported' })
 
-        if (user.email_verified === 'false' || user.kyc_verified === 'false') return res.json({ status: 404, msg: 'Complete your account verification to continue this withdrawal' })
+        if (user.email_verified === 'false' || user.kyc_verified === 'false') return res.json({ status: 404, msg: 'Complete your account verification to continue' })
 
         wallet.total_withdrawal += amount
         wallet.balance -= amount
