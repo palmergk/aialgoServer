@@ -105,7 +105,7 @@ exports.UpdateDeposits = async (req, res) => {
                                 await Notification.create({
                                     user: findMyReferral.id,
                                     title: `referral bonus`,
-                                    content: `Your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission of your referral ${depositUser.username} first deposit. Thank you for introducing more people to ${webShort}.`,
+                                    content: `Your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission on your referral ${depositUser.username} first deposit. Thank you for introducing more people to ${webShort}.`,
                                     URL: '/dashboard',
                                 })
 
@@ -599,7 +599,7 @@ exports.UpdateUsers = async (req, res) => {
         if (password) {
             const findAdmin = await User.findOne({ where: { id: req.user } })
             if (!findAdmin) return res.json({ status: 400, msg: `Admin not found` })
-            if (password !== findAdmin.password) return res.json({ status: 404, msg: `Incorrect password`  })
+            if (password !== findAdmin.password) return res.json({ status: 404, msg: `Incorrect password entered`  })
 
             if (user.role === 'admin') {
                 if (findAdmin.id !== 1) return res.json({ status: 404, msg: `Unauthorized action` })

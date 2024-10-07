@@ -23,9 +23,8 @@ exports.CreateAccount = async (req, res) => {
         if (!username) return res.json({ status: 404, msg: `Username is required` })
         if (!email) return res.json({ status: 404, msg: `Email address is required` })
         if (!country) return res.json({ status: 404, msg: `Country is required` })
-        if (!country_flag) return res.json({ status: 404, msg: `Country flag is required` })
         if (!password) return res.json({ status: 404, msg: `Password is required` })
-        if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters` })
+        if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters long` })
         if (!confirm_password) return res.json({ status: 404, msg: `Confirm password is required` })
         if (confirm_password !== password) return res.json({ status: 404, msg: `Passwords mismatch` })
 
@@ -57,13 +56,13 @@ exports.CreateAccount = async (req, res) => {
 
         const user = await User.create({
             image: imageName,
-            country_flag,
             full_name,
             username,
             email,
-            country,
-            referral_id: myReferralId,
             password,
+            country,
+            country_flag: country_flag ? country_flag : null,
+            referral_id: myReferralId,
             my_referral: referral_code ? referral_code : null
         })
 
@@ -172,7 +171,7 @@ exports.ValidateOtp = async (req, res) => {
         await findAccount.save()
 
 
-        const token = jwt.sign({ id: findAccount.id, role: findAccount.role }, process.env.JWT_SECRET, { expiresIn: '5h' })
+        const token = jwt.sign({ id: findAccount.id, role: findAccount.role }, process.env.JWT_SECRET, { expiresIn: '10h' })
 
         Mailing({
             subject: `Welcome To ${webShort}`,
@@ -197,7 +196,7 @@ exports.LoginAccount = async (req, res) => {
         const findEmail = await User.findOne({ where: { email: email } })
         if (!findEmail) return res.json({ status: 400, msg: `No account belongs to the email` })
 
-        if (password !== findEmail.password) return res.json({ status: 404, msg: `Incorrect password` })
+        if (password !== findEmail.password) return res.json({ status: 404, msg: `Incorrect password entered` })
 
         const findIfSuspended = await User.findOne({ where: { id: findEmail.id, suspend: 'true' } })
         if (findIfSuspended) return res.json({ status: 400, msg: `Your account has been suspended, kindly contact support team` })
@@ -205,7 +204,7 @@ exports.LoginAccount = async (req, res) => {
         const findIfDeleted = await User.findOne({ where: { id: findEmail.id, account_deletion: 'true' } })
         if (findIfDeleted) return res.json({ status: 400, msg: `This account was deactivated, kindly contact support team for possible reactivation` })
 
-        const token = jwt.sign({ id: findEmail.id, role: findEmail.role }, process.env.JWT_SECRET, { expiresIn: '5h' })
+        const token = jwt.sign({ id: findEmail.id, role: findEmail.role }, process.env.JWT_SECRET, { expiresIn: '10h' })
 
         return res.json({ status: 200, msg: `Login successful`, token })
     } catch (error) {
@@ -267,6 +266,7 @@ exports.ChangePasswordOnRequest = async (req, res) => {
         if (!email || !password || !confirm_password) return res.json({ status: 404, msg: 'Incomplete request found' })
 
         if (confirm_password !== password) return res.json({ status: 400, msg: 'Passwords mismatch' })
+        if (password.length < 6) return res.json({ status: 404, msg: `New Password must be at least six characters long` })
 
         const findAccount = await User.findOne({ where: { email: email } })
         if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })
@@ -347,12 +347,12 @@ exports.UpdateProfile = async (req, res) => {
 
         if (old_password) {
             if (user.password !== old_password) return res.json({ status: 404, msg: 'Incorrect old password' })
-            if (!new_password) return res.json({ status: 404, msg: `Enter a new password` })
+            if (!new_password) return res.json({ status: 404, msg: `Create a new password` })
         }
 
         if (new_password) {
             if (!old_password) return res.json({ status: 404, msg: `Enter your old password` })
-            if (new_password.length < 6) return res.json({ status: 404, msg: `New Password must be at least six characters` })
+            if (new_password.length < 6) return res.json({ status: 404, msg: `New Password must be at least six characters long` })
             user.password = new_password
         }
 
@@ -419,7 +419,7 @@ exports.DeleteAcount = async (req, res) => {
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'Account not found' })
 
-        if (password !== user.password) return res.json({ status: 404, msg: `Incorrect password` })
+        if (password !== user.password) return res.json({ status: 404, msg: `Incorrect password entered` })
 
         user.account_deletion = 'true'
         await user.save()
