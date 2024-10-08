@@ -73,7 +73,7 @@ exports.CreateAccount = async (req, res) => {
         await Notification.create({
             user: user.id,
             title: `welcome ${username}`,
-            content: `Welcome to ${webName} where we focus on making crypto trading easy. Get started by making your first deposit.`,
+            content: `Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first deposit.`,
             URL: '/dashboard/deposit',
         })
 
@@ -405,7 +405,7 @@ exports.UpdateProfile = async (req, res) => {
 
         await adminStore.save()
 
-        return res.json({ status: 200, msg: user, store: adminStore })
+        return res.json({ status: 200, msg: 'Profile updated', user: user, store: adminStore })
     } catch (error) {
         res.json({ status: 400, msg: error.message })
     }

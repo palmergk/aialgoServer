@@ -65,7 +65,7 @@ exports.Create_Update_KYC = async (req, res) => {
             await Notification.create({
                 user: req.user,
                 title: `KYC submitted`,
-                content: `Your kyc details have been submitted successfully and processing for verification.`,
+                content: `Your kyc details has been received and processing for verification.`,
                 URL: '/dashboard/verify-account/kyc',
             })
 
@@ -137,7 +137,7 @@ exports.Create_Update_KYC = async (req, res) => {
             await Notification.create({
                 user: req.user,
                 title: `KYC re-uploaded`,
-                content: `Your kyc details have been re-uploaded successfully and processing for verification.`,
+                content: `Your updated kyc details has been received and processing for verification.`,
                 URL: '/dashboard/verify-account/kyc',
             })
 

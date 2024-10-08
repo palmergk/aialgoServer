@@ -52,7 +52,7 @@ exports.CreateInvestment = async (req, res) => {
         await Notification.create({
             user: req.user,
             title: `investment success`,
-            content: `You've successfully bought ${investment.trading_plan} plan for $${investment.amount.toLocaleString()} from wallet balance, check your investment portfolio as trading begins now.`,
+            content: `You've successfully bought ${investment.trading_plan} plan for $${investment.amount.toLocaleString()} from wallet balance, trading begins now.`,
             URL: '/dashboard/investment',
         })
 

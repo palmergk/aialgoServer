@@ -71,7 +71,7 @@ exports.UpdateDeposits = async (req, res) => {
                 await Notification.create({
                     user: deposit.user,
                     title: `deposit confirmed`,
-                    content: `Your deposit amount of $${deposit.amount.toLocaleString()} confirmed. Check your wallet for your available balance.`,
+                    content: `Your deposit amount of $${deposit.amount.toLocaleString()} confirmed. See wallet for your current balance.`,
                     URL: '/dashboard',
                 })
 
@@ -113,7 +113,7 @@ exports.UpdateDeposits = async (req, res) => {
                                     subject: `Referral Bonus`,
                                     eTitle: `Referral bonus credited`,
                                     eBody: `
-                                      <div>Hello ${findMyReferral.username}, your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission of your referral <span style="font-style: italic">${depositUser.username}</span> first deposit. Thank you for introducing more people to ${webShort}.</div>
+                                      <div>Hello ${findMyReferral.username}, your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission on your referral <span style="font-style: italic">${depositUser.username}</span> first deposit. Thank you for introducing more people to ${webShort}.</div>
                                     `,
                                     account: findMyReferral
                                 })
@@ -194,7 +194,7 @@ exports.UpdateInvestments = async (req, res) => {
                 await Notification.create({
                     user: investment.user,
                     title: `profit completed`,
-                    content: `Profits for your $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment is completed. Check your investment portfolio to claim.`,
+                    content: `Profits for your $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment is completed. Check your investment portfolio to claim to wallet.`,
                     URL: '/dashboard/investment',
                 })
 
@@ -454,15 +454,9 @@ exports.AllUsers = async (req, res) => {
 
 exports.AdminCreateAccount = async (req, res) => {
     try {
-        const { full_name, username, email, country, country_flag, password, role } = req.body
-        if (!full_name) return res.json({ status: 404, msg: `Full name is required` })
-        if (!username) return res.json({ status: 404, msg: `Username is required` })
-        if (!email) return res.json({ status: 404, msg: `Email address is required` })
-        if (!country) return res.json({ status: 404, msg: `Country is required` })
-        if (!country_flag) return res.json({ status: 404, msg: `Country flag is required` })
-        if (!password) return res.json({ status: 404, msg: `Password is required` })
+        const { full_name, username, email, password, role , country, country_flag, } = req.body
+        if(!full_name || !username || !email || !password || !role || !country) return res.json({status: 404, msg: 'Incomplete request found'})
         if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters` })
-        if (!role) return res.json({ status: 404, msg: `Role is required` })
 
         const findUsername = await User.findOne({ where: { username: username } })
         if (findUsername) return res.json({ status: 400, msg: `Username already exists` })
@@ -478,9 +472,9 @@ exports.AdminCreateAccount = async (req, res) => {
                 full_name,
                 username,
                 email,
-                country,
-                country_flag,
                 password,
+                country,
+                country_flag: country_flag ? country_flag : null,
                 email_verified: 'true',
                 referral_id: myReferralId,
             })
@@ -512,9 +506,9 @@ exports.AdminCreateAccount = async (req, res) => {
                 full_name,
                 username,
                 email,
-                country,
-                country_flag,
                 password,
+                country,
+                country_flag: country_flag ? country_flag : null,
                 email_verified: 'true',
                 referral_id: myReferralId,
                 role: role
@@ -527,7 +521,6 @@ exports.AdminCreateAccount = async (req, res) => {
                 URL: '/admin-controls/users',
             })
         }
-
 
         const admin = await User.findOne({ where: { id: req.user } })
         if (admin) {
@@ -599,7 +592,7 @@ exports.UpdateUsers = async (req, res) => {
         if (password) {
             const findAdmin = await User.findOne({ where: { id: req.user } })
             if (!findAdmin) return res.json({ status: 400, msg: `Admin not found` })
-            if (password !== findAdmin.password) return res.json({ status: 404, msg: `Incorrect password entered`  })
+            if (password !== findAdmin.password) return res.json({ status: 404, msg: `Incorrect password entered` })
 
             if (user.role === 'admin') {
                 if (findAdmin.id !== 1) return res.json({ status: 404, msg: `Unauthorized action` })
