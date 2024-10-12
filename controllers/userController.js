@@ -235,7 +235,7 @@ exports.FindAccountByEmail = async (req, res) => {
         findAccount.resetcode = otp
         await findAccount.save()
 
-        return res.json({ status: 200 })
+        return res.json({ status: 200, msg: 'Verification code sent to email address' })
     } catch (error) {
         return res.json({ status: 400, msg: error.message })
     }

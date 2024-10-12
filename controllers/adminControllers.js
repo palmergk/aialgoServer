@@ -54,97 +54,96 @@ exports.UpdateDeposits = async (req, res) => {
         const depositUser = await User.findOne({ where: { id: deposit.user } })
         if (!depositUser) return res.json({ status: 400, msg: 'Deposit User not found' })
 
-        if (deposit.status === 'pending') {
+        if (deposit.status !== 'pending') return res.json({ status: 400, msg: 'Deposit already updated' })
 
-            if (status === 'confirmed') {
+        if (status === 'confirmed') {
 
-                const wallet = await Wallet.findOne({ where: { user: deposit.user } })
-                if (!wallet) return res.json({ status: 404, msg: `User wallet not found` })
+            const wallet = await Wallet.findOne({ where: { user: deposit.user } })
+            if (!wallet) return res.json({ status: 404, msg: `User wallet not found` })
 
-                wallet.total_deposit += deposit.amount
-                wallet.balance += deposit.amount
-                await wallet.save()
+            wallet.total_deposit += deposit.amount
+            wallet.balance += deposit.amount
+            await wallet.save()
 
-                deposit.status = status
-                await deposit.save()
+            deposit.status = status
+            await deposit.save()
 
-                await Notification.create({
-                    user: deposit.user,
-                    title: `deposit confirmed`,
-                    content: `Your deposit amount of $${deposit.amount.toLocaleString()} confirmed. See wallet for your current balance.`,
-                    URL: '/dashboard',
-                })
+            await Notification.create({
+                user: deposit.user,
+                title: `deposit confirmed`,
+                content: `Your deposit amount of $${deposit.amount.toLocaleString()} confirmed. See wallet for your current balance.`,
+                URL: '/dashboard',
+            })
 
-                await Mailing({
-                    subject: `Deposit Confirmation`,
-                    eTitle: `Deposit confirmed`,
-                    eBody: `
+            await Mailing({
+                subject: `Deposit Confirmation`,
+                eTitle: `Deposit confirmed`,
+                eBody: `
                       <div>Hello ${depositUser.username}, your deposit amount of $${deposit.amount.toLocaleString()} made on ${moment(deposit.createdAt).format('DD-MM-yyyy')} / ${moment(deposit.createdAt).format('h:mm')} has been successfully confirmed. See your current balance <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
-                    account: depositUser
-                })
+                account: depositUser
+            })
 
-                const UserConfirmedDeposits = await Deposit.findAll({ where: { user: deposit.user, status: 'confirmed' } })
-                if (UserConfirmedDeposits.length === 1) {
-                    const findMyReferral = await User.findOne({ where: { referral_id: depositUser.my_referral } })
+            const UserConfirmedDeposits = await Deposit.findAll({ where: { user: deposit.user, status: 'confirmed' } })
+            if (UserConfirmedDeposits.length === 1) {
+                const findMyReferral = await User.findOne({ where: { referral_id: depositUser.my_referral } })
 
-                    if (findMyReferral) {
-                        const myReferralWallet = await Wallet.findOne({ where: { user: findMyReferral.id } })
+                if (findMyReferral) {
+                    const myReferralWallet = await Wallet.findOne({ where: { user: findMyReferral.id } })
 
-                        if (myReferralWallet) {
-                            const adminStore = await AdminStore.findOne({
+                    if (myReferralWallet) {
+                        const adminStore = await AdminStore.findOne({
+                        })
+
+                        if (adminStore) {
+                            const referralBonus = deposit.amount * adminStore.referral_bonus_percentage / 100
+
+                            myReferralWallet.referral += parseFloat(referralBonus.toFixed(1))
+                            myReferralWallet.balance += parseFloat(referralBonus.toFixed(1))
+                            await myReferralWallet.save()
+
+                            await Notification.create({
+                                user: findMyReferral.id,
+                                title: `referral bonus`,
+                                content: `Your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission on your referral ${depositUser.username} first deposit. Thank you for introducing more people to ${webShort}.`,
+                                URL: '/dashboard',
                             })
 
-                            if (adminStore) {
-                                const referralBonus = deposit.amount * adminStore.referral_bonus_percentage / 100
-
-                                myReferralWallet.referral += parseFloat(referralBonus.toFixed(1))
-                                myReferralWallet.balance += parseFloat(referralBonus.toFixed(1))
-                                await myReferralWallet.save()
-
-                                await Notification.create({
-                                    user: findMyReferral.id,
-                                    title: `referral bonus`,
-                                    content: `Your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission on your referral ${depositUser.username} first deposit. Thank you for introducing more people to ${webShort}.`,
-                                    URL: '/dashboard',
-                                })
-
-                                await Mailing({
-                                    subject: `Referral Bonus`,
-                                    eTitle: `Referral bonus credited`,
-                                    eBody: `
+                            await Mailing({
+                                subject: `Referral Bonus`,
+                                eTitle: `Referral bonus credited`,
+                                eBody: `
                                       <div>Hello ${findMyReferral.username}, your wallet has been credited with $${referralBonus.toLocaleString()}, ${adminStore.referral_bonus_percentage}% commission on your referral <span style="font-style: italic">${depositUser.username}</span> first deposit. Thank you for introducing more people to ${webShort}.</div>
                                     `,
-                                    account: findMyReferral
-                                })
-                            }
+                                account: findMyReferral
+                            })
                         }
                     }
                 }
             }
+        }
 
-            if (status === 'failed') {
+        if (status === 'failed') {
 
-                deposit.status = status
-                await deposit.save()
+            deposit.status = status
+            await deposit.save()
 
-                await Notification.create({
-                    user: deposit.user,
-                    title: `deposit failed`,
-                    content: `Your deposit amount of $${deposit.amount.toLocaleString()} confirmation failed. This deposit was not confirmed.`,
-                    status: 'failed',
-                    URL: '/dashboard/deposit?screen=2',
-                })
+            await Notification.create({
+                user: deposit.user,
+                title: `deposit failed`,
+                content: `Your deposit amount of $${deposit.amount.toLocaleString()} confirmation failed. This deposit was not confirmed.`,
+                status: 'failed',
+                URL: '/dashboard/deposit?screen=2',
+            })
 
-                await Mailing({
-                    subject: `Deposit Failed`,
-                    eTitle: `Deposit failed`,
-                    eBody: `
+            await Mailing({
+                subject: `Deposit Failed`,
+                eTitle: `Deposit failed`,
+                eBody: `
                       <div>Hello ${depositUser.username}, your deposit amount of $${deposit.amount.toLocaleString()} made on ${moment(deposit.createdAt).format('DD-MM-yyyy')} / ${moment(deposit.createdAt).format('h:mm')} confirmation failed, this deposit was not confirmed. Did you make this deposit? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
-                    account: depositUser
-                })
-            }
+                account: depositUser
+            })
         }
 
         return res.json({ status: 200, msg: 'Deposit updated successfully' })
@@ -217,7 +216,6 @@ exports.UpdateInvestments = async (req, res) => {
         if (bonus) {
             investment.bonus += bonus
         }
-
         await investment.save()
 
         return res.json({ status: 200, msg: 'Investment updated successfully' })
@@ -306,7 +304,6 @@ exports.UpdateWithdrawals = async (req, res) => {
         }
 
         return res.json({ status: 200, msg: 'Withdrawal updated successfully' })
-
     } catch (error) {
         return res.json({ status: 200, msg: error.message })
     }
@@ -336,7 +333,7 @@ exports.AllTaxes = async (req, res) => {
 
 exports.UpdateTaxes = async (req, res) => {
     try {
-        const { status, message, tax_id } = req.body
+        const { status, tax_id } = req.body
         if (!tax_id) return res.json({ status: 404, msg: `Provide a tax id` })
 
         const tax = await Tax.findOne({ where: { id: tax_id } })
@@ -345,73 +342,52 @@ exports.UpdateTaxes = async (req, res) => {
         const taxPayer = await User.findOne({ where: { id: tax.user } })
         if (!taxPayer) return res.json({ status: 400, msg: 'Tax Payer not found' })
 
-        if (tax.status === 'processing') {
+        if (tax.status !== 'processing') return res.json({ status: 400, msg: 'Tax payment already updated' })
 
-            if (status === 'received') {
-
-                await Notification.create({
-                    user: tax.user,
-                    title: `tax received`,
-                    content: `Your tax payment amount of $${tax.amount.toLocaleString()} has been received and the tax cleared.`,
-                    URL: '/dashboard/tax-payment?screen=2',
-                })
-
-                await Mailing({
-                    subject: `Tax Received`,
-                    eTitle: `Tax received`,
-                    eBody: `
-                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} has been received and the tax cleared.</div>
-                    `,
-                    account: taxPayer
-                })
-
-            }
-
-            if (status === 'failed') {
-
-                await Notification.create({
-                    user: tax.user,
-                    title: `tax payment failed`,
-                    content: `Your tax payment amount of $${tax.amount.toLocaleString()} receival failed. This payment was not confirmed.`,
-                    status: 'failed',
-                    URL: '/dashboard/tax-payment?screen=2',
-                })
-
-                await Mailing({
-                    subject: `Tax Receival Failed`,
-                    eTitle: `Tax payment failed`,
-                    eBody: `
-                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} receival failed. This payment was not confirmed. Did you make this payment? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
-                    `,
-                    account: taxPayer
-                })
-            }
-
-            tax.status = status
-            await tax.save()
-        }
-
-        if (message) {
+        if (status === 'received') {
 
             await Notification.create({
                 user: tax.user,
-                title: `Support Team`,
-                content: message,
-                URL: '/dashboard/tax-payment',
+                title: `tax received`,
+                content: `Your tax payment amount of $${tax.amount.toLocaleString()} has been received and the tax cleared.`,
+                URL: '/dashboard/tax-payment?screen=2',
             })
 
             await Mailing({
-                subject: `Support Team`,
-                eTitle: `Tax notice`,
+                subject: `Tax Received`,
+                eTitle: `Tax received`,
                 eBody: `
-                  <div>${message}</div>
-                `,
+                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} has been received and the tax cleared.</div>
+                    `,
+                account: taxPayer
+            })
+
+        }
+
+        if (status === 'failed') {
+
+            await Notification.create({
+                user: tax.user,
+                title: `tax payment failed`,
+                content: `Your tax payment amount of $${tax.amount.toLocaleString()} receival failed. This payment was not confirmed.`,
+                status: 'failed',
+                URL: '/dashboard/tax-payment?screen=2',
+            })
+
+            await Mailing({
+                subject: `Tax Receival Failed`,
+                eTitle: `Tax payment failed`,
+                eBody: `
+                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} receival failed. This payment was not confirmed. Did you make this payment? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
+                    `,
                 account: taxPayer
             })
         }
 
-        return res.json({ status: 200, msg: 'Tax updated successfully' })
+        tax.status = status
+        await tax.save()
 
+        return res.json({ status: 200, msg: 'Tax updated successfully' })
     } catch (error) {
         return res.json({ status: 200, msg: error.message })
     }
@@ -454,8 +430,8 @@ exports.AllUsers = async (req, res) => {
 
 exports.AdminCreateAccount = async (req, res) => {
     try {
-        const { full_name, username, email, password, role , country, country_flag, } = req.body
-        if(!full_name || !username || !email || !password || !role || !country) return res.json({status: 404, msg: 'Incomplete request found'})
+        const { full_name, username, email, password, role, country, country_flag, } = req.body
+        if (!full_name || !username || !email || !password || !role || !country) return res.json({ status: 404, msg: 'Incomplete request found' })
         if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters` })
 
         const findUsername = await User.findOne({ where: { username: username } })
@@ -621,7 +597,7 @@ exports.ReactivateUsers = async (req, res) => {
         const user = await User.findOne({ where: { id: user_id } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
 
-        if (user.account_deletion !== 'true') return res.json({ status: 404, msg: `This account hasn't been deleted` })
+        if (user.account_deletion !== 'true') return res.json({ status: 404, msg: `Account is active` })
 
         user.account_deletion = 'false'
         await user.save()
@@ -695,56 +671,58 @@ exports.UpdateKYC = async (req, res) => {
         const kycUser = await User.findOne({ where: { id: kyc.user } })
         if (!kycUser) return res.json({ status: 400, msg: 'KYC User not found' })
 
-        if (kyc.status === 'processing') {
+        if (kyc.status !== 'processing') return res.json({ status: 400, msg: 'KYC already updated' })
 
-            if (status === 'verified') {
+        if (status === 'verified') {
 
-                kycUser.kyc_verified = 'true'
-                await kycUser.save()
+            kycUser.kyc_verified = 'true'
+            await kycUser.save()
 
-                await Notification.create({
-                    user: kyc.user,
-                    title: `KYC verified`,
-                    content: `Your KYC details submitted has been successfully verified.`,
-                    URL: '/dashboard/verify-account/kyc',
-                })
+            await Notification.create({
+                user: kyc.user,
+                title: `KYC verified`,
+                content: `Your KYC details submitted has been successfully verified.`,
+                URL: '/dashboard/verify-account/kyc',
+            })
 
-                await Mailing({
-                    subject: `KYC Verification Success`,
-                    eTitle: `KYC details verified`,
-                    eBody: `
+            await Mailing({
+                subject: `KYC Verification Success`,
+                eTitle: `KYC details verified`,
+                eBody: `
                       <div>Hello ${kycUser.username}, Your KYC details submitted has been successfully verified.</div>
                     `,
-                    account: kycUser
-                })
-            }
+                account: kycUser
+            })
+        }
 
-            if (status === 'failed') {
+        if (message) {
+            if (status === 'processing') return res.json({ status: 400, msg: 'Update kyc status' })
+        }
 
-                if (!message) return res.json({ status: 400, msg: 'Provide a reason for failed verification' })
+        if (status === 'failed') {
+            
+            if (!message) return res.json({ status: 400, msg: 'Provide a reason for failed verification' })
 
-                await Notification.create({
-                    user: kyc.user,
-                    title: `KYC verification failed`,
-                    content: message,
-                    status: 'failed',
-                    URL: '/dashboard/verify-account/kyc',
-                })
+            await Notification.create({
+                user: kyc.user,
+                title: `KYC verification failed`,
+                content: message,
+                status: 'failed',
+                URL: '/dashboard/verify-account/kyc',
+            })
 
-                await Mailing({
-                    subject: `KYC Verification Failed`,
-                    eTitle: `KYC details rejected`,
-                    eBody: `
+            await Mailing({
+                subject: `KYC Verification Failed`,
+                eTitle: `KYC details rejected`,
+                eBody: `
                       <div>${message}</div>
                     `,
-                    account: kycUser
-                })
-            }
-
-            kyc.status = status
-            await kyc.save()
-
+                account: kycUser
+            })
         }
+
+        kyc.status = status
+        await kyc.save()
 
         return res.json({ status: 200, msg: 'KYC updated successfully' })
     } catch (error) {

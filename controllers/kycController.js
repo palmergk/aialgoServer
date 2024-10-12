@@ -128,11 +128,7 @@ exports.Create_Update_KYC = async (req, res) => {
             kyc.id_number = id_number
             kyc.date_of_birth = date_of_birth
             kyc.status = 'processing'
-
             await kyc.save()
-
-            user.kyc_verified = 'false'
-            await user.save()
 
             await Notification.create({
                 user: req.user,
@@ -175,7 +171,7 @@ exports.Create_Update_KYC = async (req, res) => {
             where: { user: req.user, read: 'false' },
         })
 
-        return res.json({ status: 200, msg: 'Details submitted', profile: user, notis: notifications, unread: unreadnotis })
+        return res.json({ status: 200, msg: 'Details submitted', notis: notifications, unread: unreadnotis })
     } catch (error) {
         return res.json({ status: 400, msg: error.message })
     }
