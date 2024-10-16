@@ -12,7 +12,6 @@ exports.CreateInvestment = async (req, res) => {
     try {
         const { amount, plan_id} = req.body
         if (!amount || !plan_id) return res.json({ status: 404, msg: `Incomplete request found` })
-
         if (isNaN(amount)) return res.json({ status: 404, msg: `Enter a valid number` })
 
         const user = await User.findOne({ where: { id: req.user } })
@@ -24,9 +23,7 @@ exports.CreateInvestment = async (req, res) => {
         const wallet = await Wallet.findOne({ where: { user: req.user } })
         if (!wallet) return res.json({ status: 404, msg: `User wallet not found` })
 
-        if (amount < tradingPlan.price_start) return res.json({ status: 404, msg: `Amount entered is lower than the plan price start` })
-        if (amount > tradingPlan.price_limit) return res.json({ status: 404, msg: `Amount entered is higher than the plan price limit` })
-            
+        if (amount < tradingPlan.price_start || amount > tradingPlan.price_limit) return res.json({ status: 404, msg: `${tradingPlan.title} plan is between $${tradingPlan.price_start} - $${tradingPlan.price_limit}` })
         if (amount > wallet.balance) return res.json({ status: 404, msg: 'Insufficient balance' })
 
         if (tradingPlan.title === 'test run') {

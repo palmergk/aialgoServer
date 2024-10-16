@@ -40,7 +40,6 @@ exports.CreateAccount = async (req, res) => {
         }
 
         const profileImage = req?.files?.image
-
         const filePath = './public/profiles'
         if (!fs.existsSync(filePath)) {
             fs.mkdirSync(filePath)
@@ -55,7 +54,7 @@ exports.CreateAccount = async (req, res) => {
         const myReferralId = 'AI_' + otpGenerator.generate(8, { specialChars: false })
 
         const user = await User.create({
-            image: imageName,
+            image: profileImage ? imageName : null,
             full_name,
             username,
             email,
@@ -123,7 +122,7 @@ exports.CreateAccount = async (req, res) => {
 
         return res.json({ status: 200, msg: 'Account creation successful' })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -152,7 +151,7 @@ exports.ResendOtpVerification = async (req, res) => {
 
         return res.json({ status: 200, msg: 'OTP code resent' })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -184,7 +183,7 @@ exports.ValidateOtp = async (req, res) => {
 
         return res.json({ status: 200, msg: findAccount, token })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -208,7 +207,7 @@ exports.LoginAccount = async (req, res) => {
 
         return res.json({ status: 200, msg: `Login successful`, token })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -237,7 +236,7 @@ exports.FindAccountByEmail = async (req, res) => {
 
         return res.json({ status: 200, msg: 'Verification code sent to email address' })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -256,7 +255,7 @@ exports.VerifyOtpForPassword = async (req, res) => {
 
         return res.json({ status: 200 })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -276,7 +275,7 @@ exports.ChangePasswordOnRequest = async (req, res) => {
 
         return res.json({ status: 200, msg: 'Password change successful' })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -306,7 +305,7 @@ exports.ContactFromUsers = async (req, res) => {
 
         return res.json({ status: 200, msg: 'Message delivered' })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -370,7 +369,6 @@ exports.UpdateProfile = async (req, res) => {
             if (fs.existsSync(currentImagePath)) {
                 fs.unlinkSync(currentImagePath)
             }
-
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
@@ -407,7 +405,29 @@ exports.UpdateProfile = async (req, res) => {
 
         return res.json({ status: 200, msg: 'Profile updated', user: user, store: adminStore })
     } catch (error) {
-        res.json({ status: 400, msg: error.message })
+        res.json({ status: 500, msg: error.message })
+    }
+}
+
+exports.DeleteProfilePhoto = async (req, res) => {
+    try {
+        const user = await User.findOne({ where: { id: req.user } })
+        if (!user) return res.json({ status: 404, msg: 'Account not found' })
+        if (!user.image) return res.json({ status: 404, msg: 'Profile image not found' })
+
+        if (user.image) {
+            const profileImage = `./public/profiles/${user.image}`
+            if (fs.existsSync(profileImage)) {
+                fs.unlinkSync(profileImage)
+            }
+
+            user.image = null
+            await user.save()
+        }
+
+        return res.json({ status: 200, msg: 'Profile image deleted', user: user })
+    } catch (error) {
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -418,7 +438,6 @@ exports.DeleteAcount = async (req, res) => {
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'Account not found' })
-
         if (password !== user.password) return res.json({ status: 404, msg: `Incorrect password entered` })
 
         user.account_deletion = 'true'
@@ -447,7 +466,6 @@ exports.DeleteAcount = async (req, res) => {
         }
 
         return res.json({ status: 200, msg: 'Account deletion successful' })
-
     } catch (error) {
         return res.json({ status: 500, msg: error.message })
     }
@@ -460,7 +478,7 @@ exports.UserWallet = async (req, res) => {
 
         return res.json({ status: 200, msg: wallet })
     } catch (error) {
-        return res.json({ status: 400, msg: error.message })
+        return res.json({ status: 500, msg: error.message })
     }
 }
 
