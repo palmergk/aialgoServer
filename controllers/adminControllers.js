@@ -561,7 +561,6 @@ exports.UpdateUsers = async (req, res) => {
 
         if (minimumAmount) {
             if (isNaN(minimumAmount)) return res.json({ status: 404, msg: `Enter a valid number` })
-
             user.withdrawal_minimum = minimumAmount
         }
 
@@ -1082,7 +1081,7 @@ exports.UpdateAdminStore = async (req, res) => {
         const updated = await AdminStore.findOne({
         })
 
-        return res.json({ status: 200, msg: updated })
+        return res.json({ status: 200, msg: 'Action successful', store: updated})
     } catch (error) {
         return res.json({ status: 400, msg: error.message })
     }

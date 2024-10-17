@@ -1,4 +1,4 @@
-const { CreateAccount, LoginAccount, GetProfile, UpdateProfile, ValidateOtp, ResendOtpVerification, FindAccountByEmail, VerifyOtpForPassword, ChangePasswordOnRequest, ContactFromUsers, DeleteAcount, UserWallet, UserUp, Get_Admin_Cryptocurrency_And_Their_Wallets, GetTestRunPlan, DeleteProfilePhoto } = require('../controllers/userController')
+const { CreateAccount, LoginAccount, GetProfile, UpdateProfile, ValidateOtp, ResendOtpVerification, FindAccountByEmail, VerifyOtpForPassword, ChangePasswordOnRequest, ContactFromUsers, DeleteAcount, UserWallet, UserUp, Get_Admin_Cryptocurrency_And_Their_Wallets, GetTestRunPlan, DeleteProfilePhoto, ValidateEmail } = require('../controllers/userController')
 const { UserMiddleware, AllMiddleware } = require('../middleware/auth')
 
 
@@ -10,10 +10,10 @@ router.post('/create-account', CreateAccount)
 router.post('/login-account', LoginAccount)
 router.get('/profile', AllMiddleware, GetProfile)
 router.put('/update-profile', AllMiddleware, UpdateProfile)
-router.post('/validate-email', ValidateOtp)
+router.post('/validate-email', ValidateEmail)
 router.post('/resend-otp', ResendOtpVerification)
 router.post('/find-email', FindAccountByEmail)
-router.post('/verify-email', VerifyOtpForPassword)
+router.post('/verify-otp', VerifyOtpForPassword)
 router.post('/change-password', ChangePasswordOnRequest)
 router.post('/contact', ContactFromUsers)
 router.put('/delete-profile-photo', AllMiddleware, DeleteProfilePhoto)

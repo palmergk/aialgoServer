@@ -47,6 +47,8 @@ exports.CreateAccount = async (req, res) => {
 
         let imageName;
         if (profileImage) {
+            if (profileImage.size >= 1000000) return res.json({ status: 404, msg: `Image size too large, file must not exceed 1mb` })
+            if (!profileImage.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
             imageName = `${slug(username, '-')}.jpg`
             await profileImage.mv(`${filePath}/${imageName}`)
         }
@@ -126,6 +128,36 @@ exports.CreateAccount = async (req, res) => {
     }
 }
 
+exports.ValidateEmail = async (req, res) => {
+    try {
+        const { email, code } = req.body
+        if (!email || !code) return res.json({ status: 404, msg: 'Incomplete request found' })
+
+        const findAccount = await User.findOne({ where: { email: email } })
+        if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })
+        if (code !== findAccount.resetcode) return res.json({ status: 404, msg: 'Invalid code entered' })
+
+        findAccount.resetcode = null
+        findAccount.email_verified = 'true'
+        await findAccount.save()
+
+        const token = jwt.sign({ id: findAccount.id, role: findAccount.role }, process.env.JWT_SECRET, { expiresIn: '10h' })
+
+        Mailing({
+            subject: `Welcome To ${webShort}`,
+            eTitle: `Welcome ${findAccount.username}`,
+            eBody: `
+             <div>Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">deposit</a>.</div>
+            `,
+            account: findAccount,
+        })
+
+        return res.json({ status: 200, msg: 'Email address verified', user: findAccount, token })
+    } catch (error) {
+        return res.json({ status: 500, msg: error.message })
+    }
+}
+
 exports.ResendOtpVerification = async (req, res) => {
     try {
         const { email } = req.body
@@ -150,38 +182,6 @@ exports.ResendOtpVerification = async (req, res) => {
         await findAccount.save()
 
         return res.json({ status: 200, msg: 'OTP code resent' })
-    } catch (error) {
-        return res.json({ status: 500, msg: error.message })
-    }
-}
-
-exports.ValidateOtp = async (req, res) => {
-    try {
-        const { email, code } = req.body
-        if (!email || !code) return res.json({ status: 404, msg: 'Incomplete request found' })
-
-        const findAccount = await User.findOne({ where: { email: email } })
-        if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })
-
-        if (code !== findAccount.resetcode) return res.json({ status: 404, msg: 'Invalid code entered' })
-
-        findAccount.resetcode = null
-        findAccount.email_verified = 'true'
-        await findAccount.save()
-
-
-        const token = jwt.sign({ id: findAccount.id, role: findAccount.role }, process.env.JWT_SECRET, { expiresIn: '10h' })
-
-        Mailing({
-            subject: `Welcome To ${webShort}`,
-            eTitle: `Welcome ${findAccount.username}`,
-            eBody: `
-             <div>Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">deposit</a>.</div>
-            `,
-            account: findAccount,
-        })
-
-        return res.json({ status: 200, msg: findAccount, token })
     } catch (error) {
         return res.json({ status: 500, msg: error.message })
     }
@@ -247,7 +247,6 @@ exports.VerifyOtpForPassword = async (req, res) => {
 
         const findAccount = await User.findOne({ where: { email: email } })
         if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })
-
         if (code !== findAccount.resetcode) return res.json({ status: 404, msg: 'Invalid code entered' })
 
         findAccount.resetcode = null
@@ -365,6 +364,8 @@ exports.UpdateProfile = async (req, res) => {
         const currentImagePath = `${filePath}/${user.image}`
 
         if (image) {
+            if (image.size >= 1000000) res.json({ status: 404, msg: `Image size too large, file must not exceed 1mb` })
+            if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
 
             if (fs.existsSync(currentImagePath)) {
                 fs.unlinkSync(currentImagePath)
