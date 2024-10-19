@@ -1,6 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
     return sequelize.define('investment', {
         user: {type: DataTypes.INTEGER},
+        gen_id: {type: DataTypes.STRING},
         amount: {type: DataTypes.FLOAT},
         trading_plan: {type: DataTypes.STRING},
         plan_id: {type: DataTypes.INTEGER},

@@ -4,6 +4,7 @@ const Wallet = require('../models').wallets
 const User = require('../models').users
 const AdminWallet = require('../models').admin_wallets
 const moment = require('moment')
+const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
 const Mailing = require('../config/emailDesign')
 
@@ -22,7 +23,6 @@ exports.MakeWithdrawal = async (req, res) => {
         if (!wallet) return res.json({ status: 404, msg: `User wallet not found` })
 
         if (amount < user.withdrawal_minimum) return res.json({ status: 404, msg: `Minimum withdrawal amount is $${user.withdrawal_minimum}` })
-
         if (amount > wallet.balance) return res.json({ status: 404, msg: 'Insufficient balance' })
 
         const adminWallet = await AdminWallet.findOne({ where: { crypto_name: crypto, network: network } })
@@ -34,8 +34,11 @@ exports.MakeWithdrawal = async (req, res) => {
         wallet.balance -= amount
         await wallet.save()
 
+        const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+
         const withdrawal = await Withdrawal.create({
             user: req.user,
+            gen_id,
             amount,
             crypto,
             network,

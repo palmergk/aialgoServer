@@ -5,12 +5,12 @@ const Wallet = require('../models').wallets
 const TradingPlans = require('../models').trading_plans
 const User = require('../models').users
 const moment = require('moment')
-
+const otpGenerator = require('otp-generator')
 
 
 exports.CreateInvestment = async (req, res) => {
     try {
-        const { amount, plan_id} = req.body
+        const { amount, plan_id } = req.body
         if (!amount || !plan_id) return res.json({ status: 404, msg: `Incomplete request found` })
         if (isNaN(amount)) return res.json({ status: 404, msg: `Enter a valid number` })
 
@@ -37,8 +37,11 @@ exports.CreateInvestment = async (req, res) => {
         const topupTime = moment().add(parseFloat(1), `${tradingPlan.duration_type}`)
         const endDate = moment().add(parseFloat(tradingPlan.duration), `${tradingPlan.duration_type}`)
 
+        const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+
         const investment = await Investment.create({
             user: req.user,
+            gen_id,
             amount,
             trading_plan: tradingPlan.title,
             plan_id,

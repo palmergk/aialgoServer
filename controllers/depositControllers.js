@@ -5,13 +5,14 @@ const User = require('../models').users
 const AdminStore = require('../models').admin_store
 const AdminWallet = require('../models').admin_wallets
 const moment = require('moment')
+const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
 
 
 exports.CreateDeposit = async (req, res) => {
     try {
 
-        const { amount, wallet_id} = req.body
+        const { amount, wallet_id } = req.body
         if (!amount || !wallet_id) return res.json({ status: 404, msg: `Incomplete request found` })
         if (isNaN(amount)) return res.json({ status: 404, msg: `Enter a valid number` })
 
@@ -20,16 +21,18 @@ exports.CreateDeposit = async (req, res) => {
 
         const adminStore = await AdminStore.findOne({
         })
-
         if (adminStore) {
             if (amount < adminStore.deposit_minimum) return res.json({ status: 404, msg: `Minimum deposit amount is $${adminStore.deposit_minimum}` })
         }
 
-        const adminWallet = await AdminWallet.findOne({ where: { id: wallet_id} })
+        const adminWallet = await AdminWallet.findOne({ where: { id: wallet_id } })
         if (!adminWallet) return res.json({ status: 404, msg: 'Invalid deposit address' })
+
+        const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const deposit = await Deposit.create({
             user: req.user,
+            gen_id,
             amount,
             crypto: adminWallet.crypto_name,
             network: adminWallet.network,
