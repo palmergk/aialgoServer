@@ -211,9 +211,11 @@ exports.UpdateInvestments = async (req, res) => {
         }
 
         if (profit) {
+            if (isNaN(profit)) return res.json({ status: 404, msg: `Enter a number` })
             investment.profit += profit
         }
         if (bonus) {
+            if (isNaN(bonus)) return res.json({ status: 404, msg: `Enter a number` })
             investment.bonus += bonus
         }
         await investment.save()
@@ -534,7 +536,7 @@ exports.UpdateUsers = async (req, res) => {
         if (!user) return res.json({ status: 404, msg: 'User not found' })
 
         if (fundAmount) {
-            if (isNaN(fundAmount)) return res.json({ status: 404, msg: `Enter a valid number` })
+            if (isNaN(fundAmount)) return res.json({ status: 404, msg: `Amount must be a number` })
 
             const wallet = await Wallet.findOne({ where: { user: user.id } })
             if (!wallet) return res.json({ status: 404, msg: 'User wallet not found' })
@@ -560,7 +562,7 @@ exports.UpdateUsers = async (req, res) => {
         }
 
         if (minimumAmount) {
-            if (isNaN(minimumAmount)) return res.json({ status: 404, msg: `Enter a valid number` })
+            if (isNaN(minimumAmount)) return res.json({ status: 404, msg: `Amount must be a number` })
             user.withdrawal_minimum = minimumAmount
         }
 
@@ -699,7 +701,7 @@ exports.UpdateKYC = async (req, res) => {
         }
 
         if (status === 'failed') {
-            
+
             if (!message) return res.json({ status: 400, msg: 'Provide a reason for failed verification' })
 
             await Notification.create({
@@ -1081,7 +1083,7 @@ exports.UpdateAdminStore = async (req, res) => {
         const updated = await AdminStore.findOne({
         })
 
-        return res.json({ status: 200, msg: 'Action successful', store: updated})
+        return res.json({ status: 200, msg: 'Action successful', store: updated })
     } catch (error) {
         return res.json({ status: 400, msg: error.message })
     }

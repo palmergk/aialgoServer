@@ -14,7 +14,7 @@ exports.MakeWithdrawal = async (req, res) => {
 
         const { amount, crypto, network, withdrawal_address } = req.body
         if (!amount || !crypto || !network || !withdrawal_address) return res.json({ status: 404, msg: `Incomplete request found` })
-        if (isNaN(amount)) return res.json({ status: 404, msg: `Enter a valid number` })
+        if (isNaN(amount)) return res.json({ status: 404, msg: `Amount must be a number` })
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })

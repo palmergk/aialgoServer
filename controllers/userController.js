@@ -152,7 +152,7 @@ exports.ValidateEmail = async (req, res) => {
             account: findAccount,
         })
 
-        return res.json({ status: 200, msg: 'Email address verified', user: findAccount, token })
+        return res.json({ status: 200, token })
     } catch (error) {
         return res.json({ status: 500, msg: error.message })
     }
@@ -240,7 +240,7 @@ exports.FindAccountByEmail = async (req, res) => {
     }
 }
 
-exports.VerifyOtpForPassword = async (req, res) => {
+exports.VerifyOtp = async (req, res) => {
     try {
         const { email, code } = req.body
         if (!email || !code) return res.json({ status: 404, msg: 'Incomplete request found' })
@@ -250,9 +250,10 @@ exports.VerifyOtpForPassword = async (req, res) => {
         if (code !== findAccount.resetcode) return res.json({ status: 404, msg: 'Invalid code entered' })
 
         findAccount.resetcode = null
+        findAccount.email_verified = 'true'
         await findAccount.save()
 
-        return res.json({ status: 200 })
+        return res.json({ status: 200, msg: findAccount })
     } catch (error) {
         return res.json({ status: 500, msg: error.message })
     }
