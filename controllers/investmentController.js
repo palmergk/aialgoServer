@@ -23,7 +23,7 @@ exports.CreateInvestment = async (req, res) => {
         const wallet = await Wallet.findOne({ where: { user: req.user } })
         if (!wallet) return res.json({ status: 404, msg: `User wallet not found` })
 
-        if (amount < tradingPlan.price_start || amount > tradingPlan.price_limit) return res.json({ status: 404, msg: `${tradingPlan.title} plan is between $${tradingPlan.price_start} - $${tradingPlan.price_limit}` })
+        if (amount < tradingPlan.price_start || amount > tradingPlan.price_limit) return res.json({ status: 404, msg: `${tradingPlan.title} plan is from $${tradingPlan.price_start} - $${tradingPlan.price_limit}` })
         if (amount > wallet.balance) return res.json({ status: 404, msg: 'Insufficient wallet balance' })
 
         if (tradingPlan.title === 'test run') {
@@ -36,7 +36,6 @@ exports.CreateInvestment = async (req, res) => {
 
         const topupTime = moment().add(parseFloat(1), `${tradingPlan.duration_type}`)
         const endDate = moment().add(parseFloat(tradingPlan.duration), `${tradingPlan.duration_type}`)
-
         const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const investment = await Investment.create({

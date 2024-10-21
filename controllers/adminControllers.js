@@ -43,7 +43,6 @@ exports.AllDeposits = async (req, res) => {
 }
 
 exports.UpdateDeposits = async (req, res) => {
-
     try {
         const { status, deposit_id } = req.body
         if (!deposit_id) return res.json({ status: 404, msg: `Provide a deposit id` })
@@ -175,7 +174,6 @@ exports.AllInvestments = async (req, res) => {
 }
 
 exports.UpdateInvestments = async (req, res) => {
-
     try {
         const { status, investment_id, profit, bonus, } = req.body
         if (!investment_id) return res.json({ status: 404, msg: `Provide an investment id` })
@@ -527,7 +525,6 @@ exports.AdminCreateAccount = async (req, res) => {
 }
 
 exports.UpdateUsers = async (req, res) => {
-
     try {
         const { user_id, password, fundAmount, minimumAmount } = req.body
         if (!user_id) return res.json({ status: 404, msg: `Provide a user id` })
@@ -597,7 +594,6 @@ exports.ReactivateUsers = async (req, res) => {
 
         const user = await User.findOne({ where: { id: user_id } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
-
         if (user.account_deletion !== 'true') return res.json({ status: 404, msg: `Account is active` })
 
         user.account_deletion = 'false'
@@ -626,7 +622,6 @@ exports.ReactivateUsers = async (req, res) => {
 }
 
 exports.GetUserFigures = async (req, res) => {
-
     try {
         const { user_id } = req.body
         if (!user_id) return res.json({ status: 404, msg: `Provide a user id` })
@@ -642,7 +637,6 @@ exports.GetUserFigures = async (req, res) => {
         const userdeposits = await Deposit.findAll({
             where: { user: user.id, status: 'confirmed' }
         })
-
         if (userdeposits) {
             userdeposits.map(item => {
                 userFigures.total_deposit += item.amount
@@ -661,7 +655,6 @@ exports.GetUserFigures = async (req, res) => {
 }
 
 exports.UpdateKYC = async (req, res) => {
-
     try {
         const { kyc_id, status, message } = req.body
         if (!kyc_id) return res.json({ status: 404, msg: `Provide a kyc id` })
@@ -699,7 +692,6 @@ exports.UpdateKYC = async (req, res) => {
         if (message) {
             if (status === 'processing') return res.json({ status: 400, msg: 'Update kyc status' })
         }
-
         if (status === 'failed') {
 
             if (!message) return res.json({ status: 400, msg: 'Provide a reason for failed verification' })
@@ -733,7 +725,6 @@ exports.UpdateKYC = async (req, res) => {
 
 exports.CreateCryptocurrency = async (req, res) => {
     try {
-
         const { crypto_name } = req.body
         if (!crypto_name) return res.json({ status: 404, msg: `Incomplete request found` })
 
@@ -790,9 +781,7 @@ exports.UpdateCryptocurrency = async (req, res) => {
         }
 
         const crypto_img = req?.files?.crypto_img
-
         let cryptoImgName;
-
         const filePath = './public/cryptocurrency'
         const currentCryptoImgPath = `${filePath}/${cryptocurrency.crypto_img}`
 
@@ -801,11 +790,9 @@ exports.UpdateCryptocurrency = async (req, res) => {
             if (fs.existsSync(currentCryptoImgPath)) {
                 fs.unlinkSync(currentCryptoImgPath)
             }
-
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-
             if (crypto_name) {
                 cryptoImgName = `${slug(crypto_name, '-')}.jpg`
             } else {
@@ -948,7 +935,6 @@ exports.CreateTradingPlan = async (req, res) => {
     try {
         const { title, price_start, price_limit, profit_return, plan_bonus, duration, duration_type } = req.body
         if (!title || !price_start || !price_limit || !profit_return || !plan_bonus || !duration || !duration_type) return res.json({ status: 404, msg: `Incomplete request found` })
-
         if (isNaN(price_start) || isNaN(price_limit) || isNaN(profit_return) || isNaN(plan_bonus) || isNaN(duration)) return res.json({ status: 404, msg: `Enter valid numbers` })
 
         const matchingPlan = await TradingPlans.findOne({ where: { title: title } })
@@ -996,7 +982,7 @@ exports.UpdateTradingPlan = async (req, res) => {
         }
 
         const investments = await Investment.findAll({ where: { plan_id: plan_id, status: 'running' } })
-        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan' })
+        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again later' })
 
         if (title) {
             tradingPlan.title = title
@@ -1036,6 +1022,9 @@ exports.DeleteTradingPlan = async (req, res) => {
         const tradingPlan = await TradingPlans.findOne({ where: { id: plan_id } })
         if (!tradingPlan) return res.json({ status: 404, msg: 'Trading plan not found' })
 
+        const investments = await Investment.findAll({ where: { plan_id: tradingPlan.id, status: 'running' } })
+        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again later' })
+
         await tradingPlan.destroy()
 
         return res.json({ status: 200, msg: 'Trading plan deleted successfully' })
@@ -1057,7 +1046,6 @@ exports.GetAdminStore = async (req, res) => {
 }
 
 exports.UpdateAdminStore = async (req, res) => {
-
     try {
         const { referral_bonus_percentage, tax_percentage, deposit_minimum } = req.body
 
@@ -1099,7 +1087,6 @@ cron.schedule('* * * * *', async () => {
         investments.map(async ele => {
 
             const investmentUser = await User.findOne({ where: { id: ele.user } })
-
             const tradingPlan = await TradingPlans.findOne({ where: { id: ele.plan_id } })
 
             if (tradingPlan) {
@@ -1115,10 +1102,8 @@ cron.schedule('* * * * *', async () => {
 
                         ele.profit += parseFloat(topupProfit.toFixed(1))
                         ele.bonus += parseFloat(topupBonus.toFixed(1))
-
                         const newTopupTime = moment().add(parseFloat(1), `${tradingPlan.duration_type}`)
                         ele.topupTime = `${newTopupTime}`
-
                         ele.rounds += 1
 
                         if (ele.rounds >= tradingPlan.duration) {

@@ -11,7 +11,6 @@ const Mailing = require('../config/emailDesign')
 
 exports.MakeWithdrawal = async (req, res) => {
     try {
-
         const { amount, crypto, network, withdrawal_address } = req.body
         if (!amount || !crypto || !network || !withdrawal_address) return res.json({ status: 404, msg: `Incomplete request found` })
         if (isNaN(amount)) return res.json({ status: 404, msg: `Amount must be a number` })
@@ -54,7 +53,6 @@ exports.MakeWithdrawal = async (req, res) => {
 
         const admins = await User.findAll({ where: { role: 'admin' } })
         if (admins) {
-
             admins.map(async ele => {
 
                 await Notification.create({

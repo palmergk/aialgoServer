@@ -10,7 +10,6 @@ const { webURL } = require('../utils/utils')
 
 exports.PayTax = async (req, res) => {
     try {
-
         const { amount, wallet_id } = req.body
         if (!amount || !wallet_id) return res.json({ status: 404, msg: `Incomplete request found` })
         if (isNaN(amount)) return res.json({ status: 404, msg: `Amount must be a number` })
@@ -41,7 +40,6 @@ exports.PayTax = async (req, res) => {
 
         const admins = await User.findAll({ where: { role: 'admin' } })
         if (admins) {
-
             admins.map(async ele => {
 
                 await Notification.create({

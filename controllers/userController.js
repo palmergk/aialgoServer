@@ -18,7 +18,6 @@ const { webName, webShort, webURL } = require('../utils/utils')
 exports.CreateAccount = async (req, res) => {
     try {
         const { full_name, username, email, referral_code, country, country_flag, password, confirm_password } = req.body
-
         if (!full_name) return res.json({ status: 404, msg: `Your full name is required` })
         if (!username) return res.json({ status: 404, msg: `Username is required` })
         if (!email) return res.json({ status: 404, msg: `Email address is required` })
@@ -30,7 +29,6 @@ exports.CreateAccount = async (req, res) => {
 
         const findUsername = await User.findOne({ where: { username: username } })
         if (findUsername) return res.json({ status: 400, msg: `Username unavailable` })
-
         const findEmail = await User.findOne({ where: { email: email } })
         if (findEmail) return res.json({ status: 400, msg: `Email already exists` })
 
@@ -44,7 +42,6 @@ exports.CreateAccount = async (req, res) => {
         if (!fs.existsSync(filePath)) {
             fs.mkdirSync(filePath)
         }
-
         let imageName;
         if (profileImage) {
             if (profileImage.size >= 1000000) return res.json({ status: 404, msg: `Image size too large, file must not exceed 1mb` })
@@ -81,6 +78,7 @@ exports.CreateAccount = async (req, res) => {
         const admins = await User.findAll({ where: { role: 'admin' } })
         if (admins) {
             admins.map(async ele => {
+
                 await Notification.create({
                     user: ele.id,
                     title: `${user.username} joins ${webShort}`,
@@ -194,7 +192,6 @@ exports.LoginAccount = async (req, res) => {
 
         const findEmail = await User.findOne({ where: { email: email } })
         if (!findEmail) return res.json({ status: 400, msg: `No account belongs to the email` })
-
         if (password !== findEmail.password) return res.json({ status: 404, msg: `Incorrect password entered` })
 
         const findIfSuspended = await User.findOne({ where: { id: findEmail.id, suspend: 'true' } })
@@ -285,7 +282,6 @@ exports.ContactFromUsers = async (req, res) => {
         if (!email || !message) return res.json({ status: 404, msg: `Incomplete request found` })
 
         const admins = await User.findAll({ where: { role: 'admin' } })
-
         if (admins) {
             admins.map(async ele => {
 
@@ -389,7 +385,6 @@ exports.UpdateProfile = async (req, res) => {
 
         const adminStore = await AdminStore.findOne({
         })
-
         if (adminStore) {
 
             if (facebook) {
@@ -417,15 +412,13 @@ exports.DeleteProfilePhoto = async (req, res) => {
         if (!user) return res.json({ status: 404, msg: 'Account not found' })
         if (!user.image) return res.json({ status: 404, msg: 'Profile image not found' })
 
-        if (user.image) {
-            const profileImage = `./public/profiles/${user.image}`
-            if (fs.existsSync(profileImage)) {
-                fs.unlinkSync(profileImage)
-            }
-
-            user.image = null
-            await user.save()
+        const profileImage = `./public/profiles/${user.image}`
+        if (fs.existsSync(profileImage)) {
+            fs.unlinkSync(profileImage)
         }
+
+        user.image = null
+        await user.save()
 
         return res.json({ status: 200, msg: 'Profile image deleted', user: user })
     } catch (error) {

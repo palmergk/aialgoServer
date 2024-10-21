@@ -36,11 +36,9 @@ exports.Create_Update_KYC = async (req, res) => {
 
             if (!req.files) return res.json({ status: 404, msg: `Attach a valid ID` })
             const image = req.files.valid_id
-
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-
             imageName = `${date.getTime()}.jpg`
             await image.mv(`${filePath}/${imageName}`)
 
@@ -71,7 +69,6 @@ exports.Create_Update_KYC = async (req, res) => {
 
             const admins = await User.findAll({ where: { role: 'admin' } })
             if (admins) {
-
                 admins.map(async ele => {
 
                     await Notification.create({
@@ -98,17 +95,14 @@ exports.Create_Update_KYC = async (req, res) => {
             if (kyc.status === 'verified') return res.json({ status: 404, msg: 'KYC is verified' })
 
             const image = req?.files?.valid_id
-
             if (image) {
                 const currentImagePath = `${filePath}/${kyc.valid_id}`
                 if (fs.existsSync(currentImagePath)) {
                     fs.unlinkSync(currentImagePath)
                 }
-
                 if (!fs.existsSync(filePath)) {
                     fs.mkdirSync(filePath)
                 }
-
                 imageName = `${date.getTime()}.jpg`
                 await image.mv(`${filePath}/${imageName}`)
                 kyc.valid_id = imageName
@@ -139,7 +133,6 @@ exports.Create_Update_KYC = async (req, res) => {
 
             const admins = await User.findAll({ where: { role: 'admin' } })
             if (admins) {
-
                 admins.map(async ele => {
 
                     await Notification.create({
