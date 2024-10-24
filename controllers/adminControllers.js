@@ -191,7 +191,7 @@ exports.UpdateInvestments = async (req, res) => {
                 await Notification.create({
                     user: investment.user,
                     title: `profit completed`,
-                    content: `Profits for your $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment is completed. Check your investment portfolio to claim to wallet.`,
+                    content: `Profits for your $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment is completed and ready to claim.`,
                     URL: '/dashboard/investment',
                 })
 
@@ -602,7 +602,7 @@ exports.ReactivateUsers = async (req, res) => {
         await Notification.create({
             user: user.id,
             title: `welcome back`,
-            content: `Welcome back to ${webShort} ${user.username}. Your account has been successfully reactivated and you can now trade on our platform again.`,
+            content: `Welcome back to ${webShort} ${user.username}. Your account has been successfully reactivated and you can trade on our platform again.`,
             URL: '/dashboard/investment',
         })
 
@@ -657,7 +657,7 @@ exports.GetUserFigures = async (req, res) => {
 exports.UpdateKYC = async (req, res) => {
     try {
         const { kyc_id, status, message } = req.body
-        if (!kyc_id) return res.json({ status: 404, msg: `Provide a kyc id` })
+        if (!kyc_id) return res.json({ status: 404, msg: `Provide a KYC id` })
 
         const kyc = await Kyc.findOne({ where: { id: kyc_id } })
         if (!kyc) return res.json({ status: 400, msg: 'KYC not found' })
@@ -690,7 +690,7 @@ exports.UpdateKYC = async (req, res) => {
         }
 
         if (message) {
-            if (status === 'processing') return res.json({ status: 400, msg: 'Update kyc status' })
+            if (status === 'processing') return res.json({ status: 400, msg: 'Update KYC status' })
         }
         if (status === 'failed') {
 
@@ -982,7 +982,7 @@ exports.UpdateTradingPlan = async (req, res) => {
         }
 
         const investments = await Investment.findAll({ where: { plan_id: plan_id, status: 'running' } })
-        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again later' })
+        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again when completed' })
 
         if (title) {
             tradingPlan.title = title
@@ -1023,7 +1023,7 @@ exports.DeleteTradingPlan = async (req, res) => {
         if (!tradingPlan) return res.json({ status: 404, msg: 'Trading plan not found' })
 
         const investments = await Investment.findAll({ where: { plan_id: tradingPlan.id, status: 'running' } })
-        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again later' })
+        if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again when completed' })
 
         await tradingPlan.destroy()
 
@@ -1112,7 +1112,7 @@ cron.schedule('* * * * *', async () => {
                             await Notification.create({
                                 user: ele.user,
                                 title: `profit completed`,
-                                content: `Profits for your $${ele.amount.toLocaleString()} ${ele.trading_plan} plan investment is completed. Check your investment portfolio to claim.`,
+                                content: `Profits for your $${ele.amount.toLocaleString()} ${ele.trading_plan} plan investment is completed and ready to claim.`,
                                 URL: '/dashboard/investment',
                             })
 

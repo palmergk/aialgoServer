@@ -132,7 +132,7 @@ exports.ValidateEmail = async (req, res) => {
         if (!email || !code) return res.json({ status: 404, msg: 'Incomplete request found' })
 
         const findAccount = await User.findOne({ where: { email: email } })
-        if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })
+        if (!findAccount) return res.json({ status: 404, msg: `No account belongs to this email` })
         if (code !== findAccount.resetcode) return res.json({ status: 404, msg: 'Invalid code entered' })
 
         findAccount.resetcode = null
@@ -151,35 +151,6 @@ exports.ValidateEmail = async (req, res) => {
         })
 
         return res.json({ status: 200, token })
-    } catch (error) {
-        return res.json({ status: 500, msg: error.message })
-    }
-}
-
-exports.ResendOtpVerification = async (req, res) => {
-    try {
-        const { email } = req.body
-        if (!email) return res.json({ status: 404, msg: 'Enter a valid email address' })
-
-        const findAccount = await User.findOne({ where: { email: email } })
-        if (!findAccount) return res.json({ status: 404, msg: `Account does not exists with us` })
-
-        const otp = otpGenerator.generate(6, { specialChars: false })
-
-        Mailing({
-            subject: 'Email Verification Code',
-            eTitle: `Your email verification code`,
-            eBody: `
-             <div style="font-size: 2rem">${otp}</div>
-             <div style="margin-top: 1.5rem">This code can only be used once. If you didn't request a code, please ignore this email. Never share this code with anyone else.</div>
-            `,
-            account: findAccount,
-        })
-
-        findAccount.resetcode = otp
-        await findAccount.save()
-
-        return res.json({ status: 200, msg: 'OTP code resent' })
     } catch (error) {
         return res.json({ status: 500, msg: error.message })
     }
@@ -208,7 +179,7 @@ exports.LoginAccount = async (req, res) => {
     }
 }
 
-exports.FindAccountByEmail = async (req, res) => {
+exports.SendOTP = async (req, res) => {
     try {
         const { email } = req.body
         if (!email) return res.json({ status: 404, msg: `Provide your email address` })
@@ -397,7 +368,6 @@ exports.UpdateProfile = async (req, res) => {
                 adminStore.telegram = telegram
             }
         }
-
         await adminStore.save()
 
         return res.json({ status: 200, msg: 'Profile updated', user: user, store: adminStore })
@@ -440,7 +410,6 @@ exports.DeleteAcount = async (req, res) => {
 
         const admins = await User.findAll({ where: { role: 'admin' } })
         if (admins) {
-
             admins.map(async ele => {
                 await Notification.create({
                     user: ele.id,
