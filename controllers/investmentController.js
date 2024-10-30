@@ -36,7 +36,7 @@ exports.CreateInvestment = async (req, res) => {
 
         const topupTime = moment().add(parseFloat(1), `${tradingPlan.duration_type}`)
         const endDate = moment().add(parseFloat(tradingPlan.duration), `${tradingPlan.duration_type}`)
-        const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const investment = await Investment.create({
             user: req.user,

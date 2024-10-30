@@ -20,7 +20,7 @@ exports.PayTax = async (req, res) => {
         const adminWallet = await AdminWallet.findOne({ where: { id: wallet_id } })
         if (!adminWallet) return res.json({ status: 404, msg: 'Invalid deposit address' })
 
-        const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const tax = await Tax.create({
             user: req.user,

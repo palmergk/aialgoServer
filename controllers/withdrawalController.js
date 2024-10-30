@@ -33,7 +33,7 @@ exports.MakeWithdrawal = async (req, res) => {
         wallet.balance -= amount
         await wallet.save()
 
-        const gen_id = otpGenerator.generate(9, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const withdrawal = await Withdrawal.create({
             user: req.user,

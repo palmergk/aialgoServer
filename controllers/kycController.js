@@ -36,6 +36,7 @@ exports.Create_Update_KYC = async (req, res) => {
 
             if (!req.files) return res.json({ status: 404, msg: `Attach a valid ID` })
             const image = req.files.valid_id
+            if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
@@ -96,6 +97,7 @@ exports.Create_Update_KYC = async (req, res) => {
 
             const image = req?.files?.valid_id
             if (image) {
+                if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
                 const currentImagePath = `${filePath}/${kyc.valid_id}`
                 if (fs.existsSync(currentImagePath)) {
                     fs.unlinkSync(currentImagePath)
