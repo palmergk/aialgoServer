@@ -64,8 +64,8 @@ exports.Create_Update_KYC = async (req, res) => {
             await Notification.create({
                 user: req.user,
                 title: `KYC submitted`,
-                content: `Your kyc details has been received and processing for verification.`,
-                URL: '/dashboard/verify-account/kyc',
+                content: `Your kyc details received and processing for verification.`,
+                URL: '/dashboard/settings/kyc',
             })
 
             const admins = await User.findAll({ where: { role: 'admin' } })
@@ -129,8 +129,8 @@ exports.Create_Update_KYC = async (req, res) => {
             await Notification.create({
                 user: req.user,
                 title: `KYC re-uploaded`,
-                content: `Your updated kyc details has been received and processing for verification.`,
-                URL: '/dashboard/verify-account/kyc',
+                content: `Your updated kyc details received and processing for verification.`,
+                URL: '/dashboard/settings/kyc',
             })
 
             const admins = await User.findAll({ where: { role: 'admin' } })

@@ -30,7 +30,7 @@ exports.CreateAccount = async (req, res) => {
         const findUsername = await User.findOne({ where: { username: username } })
         if (findUsername) return res.json({ status: 400, msg: `Username unavailable` })
         const findEmail = await User.findOne({ where: { email: email } })
-        if (findEmail) return res.json({ status: 400, msg: `Email already exists` })
+        if (findEmail) return res.json({ status: 400, msg: `Email address already exists` })
 
         if (referral_code) {
             const findMyReferral = await User.findOne({ where: { referral_id: referral_code } })
@@ -64,16 +64,18 @@ exports.CreateAccount = async (req, res) => {
             my_referral: referral_code ? referral_code : null
         })
 
-        await Wallet.create({
-            user: user.id
-        })
+        if (user.id !== 1) {
+            await Wallet.create({
+                user: user.id
+            })
 
-        await Notification.create({
-            user: user.id,
-            title: `welcome ${username}`,
-            content: `Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first deposit.`,
-            URL: '/dashboard/deposit',
-        })
+            await Notification.create({
+                user: user.id,
+                title: `welcome ${username}`,
+                content: `Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first deposit.`,
+                URL: '/dashboard/deposit',
+            })
+        }
 
         const admins = await User.findAll({ where: { role: 'admin' } })
         if (admins) {

@@ -432,11 +432,12 @@ exports.AdminCreateAccount = async (req, res) => {
     try {
         const { full_name, username, email, password, role, country, country_flag, } = req.body
         if (!full_name || !username || !email || !password || !role || !country) return res.json({ status: 404, msg: 'Incomplete request found' })
-        if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters` })
+        let checkRole = ['user', 'admin'].filter(ele => role === ele)
+        if (checkRole.length < 1) return res.json({ status: 404, msg: `Invalid role entered` })
+        if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters long` })
 
         const findUsername = await User.findOne({ where: { username: username } })
         if (findUsername) return res.json({ status: 400, msg: `Username already exists` })
-
         const findEmail = await User.findOne({ where: { email: email } })
         if (findEmail) return res.json({ status: 400, msg: `Email already exists` })
 
@@ -503,7 +504,7 @@ exports.AdminCreateAccount = async (req, res) => {
             await Notification.create({
                 user: admin.id,
                 title: `${username} joins ${webShort}`,
-                content: `Hello Admin, you have successfully created ${full_name} as a ${role} on the system.`,
+                content: `Hello Admin, you have successfully created ${full_name} as a new ${role} on the system.`,
                 role: 'admin',
                 URL: '/admin-controls/users',
             })
@@ -676,7 +677,7 @@ exports.UpdateKYC = async (req, res) => {
                 user: kyc.user,
                 title: `KYC verified`,
                 content: `Your KYC details submitted has been successfully verified.`,
-                URL: '/dashboard/verify-account/kyc',
+                URL: '/dashboard/settings/kyc',
             })
 
             await Mailing({
@@ -701,7 +702,7 @@ exports.UpdateKYC = async (req, res) => {
                 title: `KYC verification failed`,
                 content: message,
                 status: 'failed',
-                URL: '/dashboard/verify-account/kyc',
+                URL: '/dashboard/settings/kyc',
             })
 
             await Mailing({
@@ -1048,7 +1049,6 @@ exports.GetAdminStore = async (req, res) => {
 exports.UpdateAdminStore = async (req, res) => {
     try {
         const { referral_bonus_percentage, tax_percentage, deposit_minimum } = req.body
-
         const adminStore = await AdminStore.findOne({
         })
         if (!adminStore) return res.json({ status: 400, msg: 'Admin Store not found' })
