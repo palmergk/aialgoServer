@@ -128,7 +128,7 @@ exports.CreateAccount = async (req, res) => {
     }
 }
 
-exports.ValidateEmail = async (req, res) => {
+exports.VerifyEmailSignIn = async (req, res) => {
     try {
         const { email, code } = req.body
         if (!email || !code) return res.json({ status: 404, msg: 'Incomplete request found' })
