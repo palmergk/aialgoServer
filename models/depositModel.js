@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
         crypto: {type: DataTypes.STRING},
         network: {type: DataTypes.STRING},
         deposit_address: {type: DataTypes.STRING},
+        payment_proof: {type: DataTypes.STRING},
         status: {type: DataTypes.STRING, defaultValue: 'pending'},
     })
 }

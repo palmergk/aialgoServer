@@ -92,7 +92,6 @@ exports.Create_Update_KYC = async (req, res) => {
             }
         }
         else {
-
             if (kyc.status === 'verified') return res.json({ status: 404, msg: 'KYC is verified' })
 
             const image = req?.files?.valid_id

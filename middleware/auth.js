@@ -29,7 +29,6 @@ exports.UserMiddleware = async (req, res, next) => {
         if (!verified) return res.json({ status: 404, msg: `Access denied` })
         const findUser = await User.findOne({ where: { id: verified.id } })
         if (!findUser) return res.json({ status: 404, msg: `Invalid account` })
-
         if (findUser.role !== 'user') return res.json({ status: 404, msg: `Unauthorized Access` })
 
         req.user = findUser.id
@@ -49,7 +48,6 @@ exports.AdminMiddleware = async (req, res, next) => {
         if (!verified) return res.json({ status: 404, msg: `Access denied` })
         const findUser = await User.findOne({ where: { id: verified.id } })
         if (!findUser) return res.json({ status: 404, msg: `Invalid account` })
-
         if (findUser.role !== 'admin') return res.json({ status: 404, msg: `Unauthorized Access` })
 
         req.user = findUser.id

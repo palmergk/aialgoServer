@@ -727,24 +727,21 @@ exports.UpdateKYC = async (req, res) => {
 exports.CreateCryptocurrency = async (req, res) => {
     try {
         const { crypto_name } = req.body
-        if (!crypto_name) return res.json({ status: 404, msg: `Incomplete request found` })
+        if (!crypto_name) return res.json({ status: 404, msg: `Crypto name is required` })
 
         const matchingCrypto = await Crypto.findOne({ where: { crypto_name: crypto_name } })
         if (matchingCrypto) return res.json({ status: 404, msg: `${crypto_name} already exists` })
 
         if (!req.files) return res.json({ status: 404, msg: `Crypto image is required` })
-
         const crypto_img = req.files.crypto_img
-
+        if (crypto_img.size >= 1000000) return res.json({ status: 404, msg: `Image size too large, file must not exceed 1mb` })
+        if (!crypto_img.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
         const filePath = './public/cryptocurrency'
         if (!fs.existsSync(filePath)) {
             fs.mkdirSync(filePath)
         }
-
         const cryptoImgName = `${slug(crypto_name, '-')}.jpg`
-
         await crypto_img.mv(`${filePath}/${cryptoImgName}`)
-
 
         await Crypto.create({
             crypto_name,
@@ -776,9 +773,20 @@ exports.UpdateCryptocurrency = async (req, res) => {
         const cryptocurrency = await Crypto.findOne({ where: { id: crypto_id } })
         if (!cryptocurrency) return res.json({ status: 404, msg: 'Crypto not found' })
 
-        if (cryptocurrency.crypto_name !== crypto_name) {
-            const matchingCrypto = await Crypto.findOne({ where: { crypto_name: crypto_name } })
-            if (matchingCrypto) return res.json({ status: 404, msg: `${crypto_name} already exists` })
+        if (crypto_name) {
+            if (cryptocurrency.crypto_name !== crypto_name) {
+                const matchingCrypto = await Crypto.findOne({ where: { crypto_name: crypto_name } })
+                if (matchingCrypto) return res.json({ status: 404, msg: `${crypto_name} already exists` })
+                cryptocurrency.crypto_name = crypto_name
+
+                const cryptoWallets = await AdminWallet.findAll({ where: { crypto: cryptocurrency.id } })
+                if (cryptoWallets) {
+                    cryptoWallets.map(async ele => {
+                        ele.crypto_name = crypto_name
+                        await ele.save()
+                    })
+                }
+            }
         }
 
         const crypto_img = req?.files?.crypto_img
@@ -787,7 +795,6 @@ exports.UpdateCryptocurrency = async (req, res) => {
         const currentCryptoImgPath = `${filePath}/${cryptocurrency.crypto_img}`
 
         if (crypto_img) {
-
             if (fs.existsSync(currentCryptoImgPath)) {
                 fs.unlinkSync(currentCryptoImgPath)
             }
@@ -802,18 +809,6 @@ exports.UpdateCryptocurrency = async (req, res) => {
 
             await crypto_img.mv(`${filePath}/${cryptoImgName}`)
             cryptocurrency.crypto_img = cryptoImgName
-        }
-
-        if (crypto_name) {
-            cryptocurrency.crypto_name = crypto_name
-
-            const cryptoWallets = await AdminWallet.findAll({ where: { crypto: cryptocurrency.id } })
-            if (cryptoWallets) {
-                cryptoWallets.map(async ele => {
-                    ele.crypto_name = crypto_name
-                    await ele.save()
-                })
-            }
         }
 
         await cryptocurrency.save()
@@ -861,7 +856,7 @@ exports.CreateAdminWallets = async (req, res) => {
         const cryptocurrency = await Crypto.findOne({ where: { id: crypto_id } })
         if (!cryptocurrency) return res.json({ status: 404, msg: 'Crypto not found' })
 
-        const matchingNetwork = await AdminWallet.findOne({ where: { crypto_name: crypto_name, network: network } })
+        const matchingNetwork = await AdminWallet.findOne({ where: { crypto: crypto_id, network: network } })
         if (matchingNetwork) return res.json({ status: 404, msg: `${network} network already exists on ${crypto_name}` })
 
         await AdminWallet.create({
@@ -896,13 +891,12 @@ exports.UpdateAdminWallet = async (req, res) => {
         const adminWallet = await AdminWallet.findOne({ where: { id: wallet_id } })
         if (!adminWallet) return res.json({ status: 404, msg: 'Wallet not found' })
 
-        if (adminWallet.network !== network) {
-            const matchingNetwork = await AdminWallet.findOne({ where: { crypto_name: adminWallet.crypto_name, network: network } })
-            if (matchingNetwork) return res.json({ status: 404, msg: `${network} network already exists on ${adminWallet.crypto_name}` })
-        }
-
         if (network) {
-            adminWallet.network = network
+            if (adminWallet.network !== network) {
+                const matchingNetwork = await AdminWallet.findOne({ where: { crypto: adminWallet.crypto, network: network } })
+                if (matchingNetwork) return res.json({ status: 404, msg: `${network} network already exists on ${adminWallet.crypto_name}` })
+                adminWallet.network = network
+            }
         }
         if (address) {
             adminWallet.address = address
@@ -977,16 +971,15 @@ exports.UpdateTradingPlan = async (req, res) => {
         const tradingPlan = await TradingPlans.findOne({ where: { id: plan_id } })
         if (!tradingPlan) return res.json({ status: 404, msg: 'Trading plan not found' })
 
-        if (tradingPlan.title !== title) {
-            const matchingPlan = await TradingPlans.findOne({ where: { title: title } })
-            if (matchingPlan) return res.json({ status: 404, msg: `${title} plan already exists` })
-        }
-
         const investments = await Investment.findAll({ where: { plan_id: plan_id, status: 'running' } })
         if (investments.length > 0) return res.json({ status: 404, msg: 'Ongoing investment(s) on this plan, try again when completed' })
 
         if (title) {
-            tradingPlan.title = title
+            if (tradingPlan.title !== title) {
+                const matchingPlan = await TradingPlans.findOne({ where: { title: title } })
+                if (matchingPlan) return res.json({ status: 404, msg: `${title} plan already exists` })
+                tradingPlan.title = title
+            }
         }
         if (price_start) {
             tradingPlan.price_start = price_start
@@ -1125,12 +1118,10 @@ cron.schedule('* * * * *', async () => {
                                 account: investmentUser
                             })
                         }
-
                         await ele.save()
                     }
                 }
             }
-
         })
     }
 })

@@ -5,6 +5,7 @@ const User = require('../models').users
 const AdminStore = require('../models').admin_store
 const AdminWallet = require('../models').admin_wallets
 const moment = require('moment')
+const fs = require('fs')
 const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
 
@@ -27,6 +28,17 @@ exports.CreateDeposit = async (req, res) => {
         const adminWallet = await AdminWallet.findOne({ where: { id: wallet_id } })
         if (!adminWallet) return res.json({ status: 404, msg: 'Invalid deposit address' })
 
+        if (!req.files) return res.json({ status: 404, msg: `Attach a proof of payment` })
+        const filePath = './public/payment_proof'
+        const date = new Date()
+        const image = req.files.payment_proof
+        if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
+        if (!fs.existsSync(filePath)) {
+            fs.mkdirSync(filePath)
+        }
+        const imageName = `${date.getTime()}.jpg`
+        await image.mv(`${filePath}/${imageName}`)
+
         const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const deposit = await Deposit.create({
@@ -35,7 +47,8 @@ exports.CreateDeposit = async (req, res) => {
             amount,
             crypto: adminWallet.crypto_name,
             network: adminWallet.network,
-            deposit_address: adminWallet.address
+            deposit_address: adminWallet.address,
+            payment_proof: imageName
         })
 
         await Notification.create({

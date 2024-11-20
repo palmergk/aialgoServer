@@ -4,6 +4,7 @@ const User = require('../models').users
 const Notification = require('../models').notifications
 const AdminWallet = require('../models').admin_wallets
 const moment = require('moment')
+const fs = require('fs')
 const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
 
@@ -13,12 +14,24 @@ exports.PayTax = async (req, res) => {
         const { amount, wallet_id } = req.body
         if (!amount || !wallet_id) return res.json({ status: 404, msg: `Incomplete request found` })
         if (isNaN(amount)) return res.json({ status: 404, msg: `Amount must be a number` })
+        if (amount < 1) return res.json({ status: 404, msg: `Minimum tax payment is $1` })
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
 
         const adminWallet = await AdminWallet.findOne({ where: { id: wallet_id } })
         if (!adminWallet) return res.json({ status: 404, msg: 'Invalid deposit address' })
+
+        if (!req.files) return res.json({ status: 404, msg: `Attach a proof of payment` })
+        const filePath = './public/payment_proof'
+        const date = new Date()
+        const image = req.files.payment_proof
+        if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
+        if (!fs.existsSync(filePath)) {
+            fs.mkdirSync(filePath)
+        }
+        const imageName = `${date.getTime()}.jpg`
+        await image.mv(`${filePath}/${imageName}`)
 
         const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
@@ -28,7 +41,8 @@ exports.PayTax = async (req, res) => {
             amount,
             crypto: adminWallet.crypto_name,
             network: adminWallet.network,
-            deposit_address: adminWallet.address
+            deposit_address: adminWallet.address,
+            payment_proof: imageName
         })
 
         await Notification.create({

@@ -143,7 +143,7 @@ exports.ClaimInvestment = async (req, res) => {
         await Notification.create({
             user: req.user,
             title: `claim success`,
-            content: `Your $${investment.amount} ${investment.trading_plan} plan investment, profit and bonus generated has been successfully claimed to your wallet.`,
+            content: `Your $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment, profit and bonus generated has been successfully claimed to your wallet.`,
             URL: '/dashboard',
         })
 

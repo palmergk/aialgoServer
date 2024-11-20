@@ -343,7 +343,6 @@ exports.UpdateProfile = async (req, res) => {
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-
             if (username) {
                 imageName = `${slug(username, '-')}.jpg`
             } else {
@@ -359,7 +358,6 @@ exports.UpdateProfile = async (req, res) => {
         const adminStore = await AdminStore.findOne({
         })
         if (adminStore) {
-
             if (facebook) {
                 adminStore.facebook = facebook
             }
@@ -388,7 +386,6 @@ exports.DeleteProfilePhoto = async (req, res) => {
         if (fs.existsSync(profileImage)) {
             fs.unlinkSync(profileImage)
         }
-
         user.image = null
         await user.save()
 
