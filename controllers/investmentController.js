@@ -70,9 +70,9 @@ exports.CreateInvestment = async (req, res) => {
         const ups = await Up.findOne({ where: { user: req.user } })
         if (!ups) {
             await Up.create({
+                user: req.user,
                 new_profit: 0,
-                new_bonus: 0,
-                user: req.user
+                new_bonus: 0
             })
         }
 

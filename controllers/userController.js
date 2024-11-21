@@ -439,20 +439,21 @@ exports.UserWallet = async (req, res) => {
         const wallet = await Wallet.findOne({ where: { user: req.user } })
         if (!wallet) return res.json({ status: 400, msg: 'User wallet not found' })
 
-        return res.json({ status: 200, msg: wallet })
+        let altups = {}
+        const ups = await Up.findOne({ where: { user: req.user } })
+        if (ups) {
+            altups = ups
+        }
+
+        let altTR = {}
+        const testRunPlan = await TradingPlans.findOne({ where: { title: 'test run' } })
+        if (testRunPlan) {
+            altTR = testRunPlan
+        }
+
+        return res.json({ status: 200, msg: wallet, ups: altups, testRun: altTR })
     } catch (error) {
         return res.json({ status: 500, msg: error.message })
-    }
-}
-
-exports.UserUp = async (req, res) => {
-    try {
-        const ups = await Up.findOne({ where: { user: req.user } })
-        if (!ups) return res.json({ status: 400, msg: 'User ups not found' })
-
-        return res.json({ status: 200, msg: ups })
-    } catch (error) {
-        res.json({ status: 500, msg: error.message })
     }
 }
 
@@ -468,17 +469,6 @@ exports.Get_Admin_Cryptocurrency_And_Their_Wallets = async (req, res) => {
         })
 
         return res.json({ status: 200, msg: crypto_and_wallets })
-    } catch (error) {
-        res.json({ status: 500, msg: error.message })
-    }
-}
-
-exports.GetTestRunPlan = async (req, res) => {
-    try {
-        const testRunPlan = await TradingPlans.findOne({ where: { title: 'test run' } })
-        if (!testRunPlan) return res.json({ status: 400, msg: 'Test run plan does not exist' })
-
-        return res.json({ status: 200, msg: testRunPlan })
     } catch (error) {
         res.json({ status: 500, msg: error.message })
     }
