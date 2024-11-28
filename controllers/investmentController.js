@@ -51,7 +51,7 @@ exports.CreateInvestment = async (req, res) => {
         await Notification.create({
             user: req.user,
             title: `investment success`,
-            content: `You've successfully bought ${investment.trading_plan} plan for $${investment.amount.toLocaleString()} from wallet balance, trading begins now.`,
+            content: `You've successfully bought $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment from wallet balance, trading begins now.`,
             URL: '/dashboard/investment',
         })
 
@@ -61,7 +61,7 @@ exports.CreateInvestment = async (req, res) => {
                 await Notification.create({
                     user: ele.id,
                     title: `investment alert`,
-                    content: `Hello Admin, ${user.username} just made an investment of $${investment.amount.toLocaleString()} ${investment.trading_plan} plan, trading begins now.`,
+                    content: `Hello Admin, ${user.username} just bought $${investment.amount.toLocaleString()} ${investment.trading_plan} plan investment, trading begins now.`,
                     URL: '/admin-controls/investments',
                 })
             })

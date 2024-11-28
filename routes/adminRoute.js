@@ -1,7 +1,6 @@
 const { AllUsers, AllWithdrawals, UpdateWithdrawals, CreateAdminWallets, UpdateAdminWallet, DeleteWallet, GetAdminWallets, GetUserFigures, AllInvestments, UpdateInvestments, CreateTradingPlan, GetTradingPlans, UpdateTradingPlan, DeleteTradingPlan, AllDeposits, UpdateDeposits, GetAdminStore, UpdateAdminStore, AllTaxes, UpdateTaxes, AdminCreateAccount, UpdateUsers, UpdateKYC, CreateCryptocurrency, GetCryptocurrency, UpdateCryptocurrency, DeleteCryptocurrency, ReactivateUsers } = require('../controllers/adminControllers')
 const { AdminMiddleware } = require('../middleware/auth')
 
-
 const router = require('express').Router()
 
 router.get('/all-users', AdminMiddleware, AllUsers)
@@ -32,6 +31,5 @@ router.put('/update-trading-plan', AdminMiddleware, UpdateTradingPlan)
 router.post('/delete-trading-plan', AdminMiddleware, DeleteTradingPlan)
 router.get('/admin-store', GetAdminStore)
 router.put('/update-admin-store', AdminMiddleware, UpdateAdminStore)
-
 
 module.exports = router

@@ -11,7 +11,6 @@ sequelize.authenticate()
     .catch((error) => { console.log(error) })
 
 const db = {}
-
 db.sequelize = sequelize
 db.Sequelize = Sequelize
 
@@ -28,7 +27,6 @@ db.admin_store = require('./adminStore')(sequelize, DataTypes)
 db.taxes = require('./TaxesModel')(sequelize, DataTypes)
 db.kyc = require('./KycModel')(sequelize, DataTypes)
 db.crypto = require('./CryptoModel')(sequelize, DataTypes)
-
 
 db.users.hasMany(db.deposits, { foreignKey: 'user', as: 'depositUser' })
 db.users.hasMany(db.notifications, { foreignKey: 'user', as: 'notiUser' })
@@ -51,5 +49,5 @@ db.taxes.belongsTo(db.users, { foreignKey: 'user', as: 'taxPayer' })
 db.kyc.belongsTo(db.users, { foreignKey: 'user', as: 'kycUser' })
 
 db.sequelize.sync({ force: false }).then(() => console.log('Tables synced'))
-
+.catch((error) => console.log(error))
 module.exports = db

@@ -65,7 +65,7 @@ exports.CreateDeposit = async (req, res) => {
                 await Notification.create({
                     user: ele.id,
                     title: `deposit alert`,
-                    content: `Hello Admin, ${user.username} just made a deposit of $${deposit.amount.toLocaleString()} with ${deposit.crypto} on ${deposit.network} network deposit address, please confirm transaction.`,
+                    content: `Hello Admin, ${user.username} just made a deposit of $${deposit.amount.toLocaleString()} with ${deposit.crypto}, please confirm transaction.`,
                     URL: '/admin-controls',
                 })
 

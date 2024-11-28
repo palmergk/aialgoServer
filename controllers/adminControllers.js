@@ -344,20 +344,20 @@ exports.UpdateTaxes = async (req, res) => {
 
         if (tax.status !== 'processing') return res.json({ status: 400, msg: 'Tax payment already updated' })
 
-        if (status === 'received') {
+        if (status === 'confirmed') {
 
             await Notification.create({
                 user: tax.user,
-                title: `tax received`,
-                content: `Your tax payment amount of $${tax.amount.toLocaleString()} has been received and the tax cleared.`,
+                title: `tax payment confirmed`,
+                content: `Your tax payment amount of $${tax.amount.toLocaleString()} confirmed and the tax cleared.`,
                 URL: '/dashboard/tax-payment?screen=2',
             })
 
             await Mailing({
-                subject: `Tax Received`,
-                eTitle: `Tax received`,
+                subject: `Tax Payment Confirmation`,
+                eTitle: `Tax payment confirmed`,
                 eBody: `
-                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} has been received and the tax cleared.</div>
+                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} has been confirmed and the tax cleared.</div>
                     `,
                 account: taxPayer
             })
@@ -369,16 +369,16 @@ exports.UpdateTaxes = async (req, res) => {
             await Notification.create({
                 user: tax.user,
                 title: `tax payment failed`,
-                content: `Your tax payment amount of $${tax.amount.toLocaleString()} receival failed. This payment was not confirmed.`,
+                content: `Your tax payment amount of $${tax.amount.toLocaleString()} confirmation failed. This payment was not confirmed.`,
                 status: 'failed',
                 URL: '/dashboard/tax-payment?screen=2',
             })
 
             await Mailing({
-                subject: `Tax Receival Failed`,
+                subject: `Tax Payment Failed`,
                 eTitle: `Tax payment failed`,
                 eBody: `
-                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} receival failed. This payment was not confirmed. Did you make this payment? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
+                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} confirmation failed. This payment was not confirmed. Did you make this payment? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
                 account: taxPayer
             })

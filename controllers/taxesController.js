@@ -59,7 +59,7 @@ exports.PayTax = async (req, res) => {
                 await Notification.create({
                     user: ele.id,
                     title: `tax payment alert`,
-                    content: `Hello Admin, ${user.username} just made a tax payment amount of $${tax.amount.toLocaleString()} with ${tax.crypto} on ${tax.network} network deposit address, please confirm transaction.`,
+                    content: `Hello Admin, ${user.username} just made a tax payment amount of $${tax.amount.toLocaleString()} with ${tax.crypto}, please confirm transaction.`,
                     URL: '/admin-controls/taxes',
                 })
 
