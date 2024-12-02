@@ -1076,48 +1076,43 @@ cron.schedule('* * * * *', async () => {
     const investments = await Investment.findAll({ where: { status: 'running' } })
 
     if (investments) {
-
         investments.map(async ele => {
-
             const investmentUser = await User.findOne({ where: { id: ele.user } })
             const tradingPlan = await TradingPlans.findOne({ where: { id: ele.plan_id } })
 
             if (tradingPlan) {
+                const totalProfit = ele.amount * tradingPlan.profit_return / 100
+                const totalBonus = ele.amount * tradingPlan.plan_bonus / tradingPlan.price_limit
+                const topupProfit = totalProfit / tradingPlan.duration
+                const topupBonus = totalBonus / tradingPlan.duration
 
-                const TotalProfit = ele.amount * tradingPlan.profit_return / 100
-                const TotalBonus = ele.amount * tradingPlan.plan_bonus / tradingPlan.price_limit
-                const topupProfit = TotalProfit / tradingPlan.duration
-                const topupBonus = TotalBonus / tradingPlan.duration
+                if (moment().isSameOrAfter(new Date(ele.endDate))) {
+                    ele.profit = parseFloat(totalProfit.toFixed(1))
+                    ele.bonus = parseFloat(totalBonus.toFixed(1))
+                    ele.status = 'completed'
+                    await ele.save()
 
-                if (moment().isSameOrAfter(new Date(ele.topupTime))) {
+                    await Notification.create({
+                        user: ele.user,
+                        title: `profit completed`,
+                        content: `Profits for your $${ele.amount.toLocaleString()} ${ele.trading_plan} plan investment is completed and ready to claim.`,
+                        URL: '/dashboard/investment',
+                    })
 
-                    if (ele.rounds < tradingPlan.duration) {
-
+                    await Mailing({
+                        subject: `Investment Profit Completed`,
+                        eTitle: `Investment profit completed`,
+                        eBody: `
+                              <div>Hello ${investmentUser.username}, your investment of $${ele.amount.toLocaleString()} ${ele.trading_plan} plan made on ${moment(ele.createdAt).format('DD-MM-yyyy')} / ${moment(ele.createdAt).format('h:mm')} profit generation is completed. You can see total profit generated and claim to your wallet <a href='${webURL}/dashboard/investment' style="text-decoration: underline; color: #E96E28">here</a></div>
+                            `,
+                        account: investmentUser
+                    })
+                } else {
+                    if (moment().isSameOrAfter(new Date(ele.topupTime))) {
                         ele.profit += parseFloat(topupProfit.toFixed(1))
                         ele.bonus += parseFloat(topupBonus.toFixed(1))
                         const newTopupTime = moment().add(parseFloat(1), `${tradingPlan.duration_type}`)
                         ele.topupTime = `${newTopupTime}`
-                        ele.rounds += 1
-
-                        if (ele.rounds >= tradingPlan.duration) {
-                            ele.status = 'completed'
-
-                            await Notification.create({
-                                user: ele.user,
-                                title: `profit completed`,
-                                content: `Profits for your $${ele.amount.toLocaleString()} ${ele.trading_plan} plan investment is completed and ready to claim.`,
-                                URL: '/dashboard/investment',
-                            })
-
-                            await Mailing({
-                                subject: `Investment Profit Completed`,
-                                eTitle: `Investment profit completed`,
-                                eBody: `
-                              <div>Hello ${investmentUser.username}, your investment of $${ele.amount.toLocaleString()} ${ele.trading_plan} plan made on ${moment(ele.createdAt).format('DD-MM-yyyy')} / ${moment(ele.createdAt).format('h:mm')} profit generation is completed. You can see total profit generated and claim to your wallet <a href='${webURL}/dashboard/investment' style="text-decoration: underline; color: #E96E28">here</a></div>
-                            `,
-                                account: investmentUser
-                            })
-                        }
                         await ele.save()
                     }
                 }
