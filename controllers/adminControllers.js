@@ -747,6 +747,7 @@ exports.CreateCryptocurrency = async (req, res) => {
             crypto_name,
             crypto_img: cryptoImgName,
         })
+        // console.log(crypto_img)
 
         return res.json({ status: 200, msg: 'Cryptocurrency created successfully' })
     } catch (error) {

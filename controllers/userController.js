@@ -251,7 +251,7 @@ exports.ChangePasswordOnRequest = async (req, res) => {
 
 exports.ContactFromUsers = async (req, res) => {
     try {
-        const { email, title, message } = req.body
+        const { email, subject, message } = req.body
         if (!email || !message) return res.json({ status: 404, msg: `Incomplete request found` })
 
         const admins = await User.findAll({ where: { role: 'admin' } })
@@ -263,7 +263,7 @@ exports.ContactFromUsers = async (req, res) => {
                     eTitle: `${webShort} user sends message`,
                     eBody: `
                      <div><span style="font-style: italic; font-size: 0.85rem">from:</span><span style="padding-left: 1rem">${email}</span></div>
-                     <div style="margin-top: 0.5rem"><span style="font-style: italic; font-size: 0.85rem;">title:</span><span style="padding-left: 1rem">${title ? title : 'no title'}</span></div>
+                     <div style="margin-top: 0.5rem"><span style="font-style: italic; font-size: 0.85rem;">subject:</span><span style="padding-left: 1rem">${subject ? subject : 'no subject'}</span></div>
                      <div style="margin-top: 1rem; font-style: italic; font-size: 0.85rem">message:</div>
                      <div style="margin-top: 0.5rem">${message}</div>
                     `,
