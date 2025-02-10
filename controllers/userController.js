@@ -28,9 +28,9 @@ exports.CreateAccount = async (req, res) => {
         if (confirm_password !== password) return res.json({ status: 404, msg: `Passwords mismatch` })
 
         const findUsername = await User.findOne({ where: { username: username } })
-        if (findUsername) return res.json({ status: 400, msg: `Username unavailable` })
+        if (findUsername) return res.json({ status: 404, msg: `Username unavailable` })
         const findEmail = await User.findOne({ where: { email: email } })
-        if (findEmail) return res.json({ status: 400, msg: `Email address already exists` })
+        if (findEmail) return res.json({ status: 404, msg: `Email address already exists` })
 
         if (referral_code) {
             const findMyReferral = await User.findOne({ where: { referral_id: referral_code } })
@@ -100,7 +100,7 @@ exports.CreateAccount = async (req, res) => {
             })
         }
 
-        const otp = otpGenerator.generate(6, { specialChars: false })
+        const otp = otpGenerator.generate(6, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false })
 
         Mailing({
             subject: 'Email Verification Code',
@@ -189,7 +189,7 @@ exports.SendOTP = async (req, res) => {
         const findAccount = await User.findOne({ where: { email: email } })
         if (!findAccount) return res.json({ status: 404, msg: `No account belongs to this email` })
 
-        const otp = otpGenerator.generate(6, { specialChars: false })
+        const otp = otpGenerator.generate(6, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false })
 
         Mailing({
             subject: 'Email Verification Code',
@@ -437,7 +437,7 @@ exports.DeleteAcount = async (req, res) => {
 exports.UserWallet = async (req, res) => {
     try {
         const wallet = await Wallet.findOne({ where: { user: req.user } })
-        if (!wallet) return res.json({ status: 400, msg: 'User wallet not found' })
+        if (!wallet) return res.json({ status: 404, msg: 'User wallet not found' })
 
         let altups = {}
         const ups = await Up.findOne({ where: { user: req.user } })

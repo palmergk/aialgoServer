@@ -46,7 +46,7 @@ exports.UpdateAllNotifications = async (req, res) => {
     }
 }
 
-exports.UpdateSingleNotifications = async (req, res) => {
+exports.UpdateSingleNotification = async (req, res) => {
     try {
         const { notification_id } = req.body
         if (!notification_id) return res.json({ status: 404, msg: `Notification id is required` })
