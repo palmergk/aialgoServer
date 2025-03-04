@@ -38,7 +38,7 @@ exports.Create_Update_KYC = async (req, res) => {
             const image = req.files.valid_id
             if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
             if (!fs.existsSync(filePath)) {
-                fs.mkdirSync(filePath)
+                fs.mkdirSync(filePath, { recursive: true })
             }
             imageName = `${date.getTime()}.jpg`
             await image.mv(`${filePath}/${imageName}`)
@@ -102,7 +102,7 @@ exports.Create_Update_KYC = async (req, res) => {
                     fs.unlinkSync(currentImagePath)
                 }
                 if (!fs.existsSync(filePath)) {
-                    fs.mkdirSync(filePath)
+                    fs.mkdirSync(filePath, { recursive: true })
                 }
                 imageName = `${date.getTime()}.jpg`
                 await image.mv(`${filePath}/${imageName}`)
@@ -115,7 +115,7 @@ exports.Create_Update_KYC = async (req, res) => {
             kyc.marital_status = marital_status
             kyc.country = country
             kyc.country_flag = country_flag,
-            kyc.phone_code = phone_code
+                kyc.phone_code = phone_code
             kyc.postal = postal
             kyc.phone_number = phone_number
             kyc.state = state

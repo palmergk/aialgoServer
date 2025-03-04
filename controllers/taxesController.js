@@ -28,7 +28,7 @@ exports.PayTax = async (req, res) => {
         const image = req.files.payment_proof
         if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
         if (!fs.existsSync(filePath)) {
-            fs.mkdirSync(filePath)
+            fs.mkdirSync(filePath, { recursive: true })
         }
         const imageName = `${date.getTime()}.jpg`
         await image.mv(`${filePath}/${imageName}`)

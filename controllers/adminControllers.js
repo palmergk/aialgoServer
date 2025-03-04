@@ -738,7 +738,7 @@ exports.CreateCryptocurrency = async (req, res) => {
         if (!crypto_img.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
         const filePath = './public/cryptocurrency'
         if (!fs.existsSync(filePath)) {
-            fs.mkdirSync(filePath)
+            fs.mkdirSync(filePath, { recursive: true })
         }
         const cryptoImgName = `${slug(crypto_name, '-')}.jpg`
         await crypto_img.mv(`${filePath}/${cryptoImgName}`)
@@ -747,7 +747,6 @@ exports.CreateCryptocurrency = async (req, res) => {
             crypto_name,
             crypto_img: cryptoImgName,
         })
-        // console.log(crypto_img)
 
         return res.json({ status: 200, msg: 'Cryptocurrency created successfully' })
     } catch (error) {
@@ -800,7 +799,7 @@ exports.UpdateCryptocurrency = async (req, res) => {
                 fs.unlinkSync(currentCryptoImgPath)
             }
             if (!fs.existsSync(filePath)) {
-                fs.mkdirSync(filePath)
+                fs.mkdirSync(filePath, { recursive: true })
             }
             if (crypto_name) {
                 cryptoImgName = `${slug(crypto_name, '-')}.jpg`
