@@ -17,6 +17,7 @@ var cron = require('node-cron');
 const moment = require('moment')
 const Mailing = require('../config/emailDesign')
 const { webShort, webURL, webName } = require('../utils/utils')
+const { Op } = require('sequelize')
 
 
 
@@ -432,8 +433,8 @@ exports.AdminCreateAccount = async (req, res) => {
     try {
         const { full_name, username, email, password, role, country, country_flag, } = req.body
         if (!full_name || !username || !email || !password || !role || !country) return res.json({ status: 404, msg: 'Incomplete request found' })
-        let checkRole = ['user', 'admin'].filter(ele => role === ele)
-        if (checkRole.length < 1) return res.json({ status: 404, msg: `Invalid role entered` })
+        const roleArray = ["user", "admin"]
+        if (!roleArray.includes(role)) return res.json({ status: 404, msg: `Invalid role provided` })
         if (password.length < 6) return res.json({ status: 404, msg: `Password must be at least 6 characters long` })
 
         const findUsername = await User.findOne({ where: { username: username } })
@@ -478,6 +479,9 @@ exports.AdminCreateAccount = async (req, res) => {
         }
 
         if (role === 'admin') {
+            const findAdmin = await User.findOne({ where: { id: req.user } })
+            if (!findAdmin) return res.json({ status: 400, msg: 'Admin not found' })
+            if (findAdmin.role !== 'super admin') return res.json({ status: 400, msg: 'Only a super admin can create another admin' })
 
             const newAdmin = await User.create({
                 full_name,
@@ -499,14 +503,15 @@ exports.AdminCreateAccount = async (req, res) => {
             })
         }
 
-        const admin = await User.findOne({ where: { id: req.user } })
-        if (admin) {
-            await Notification.create({
-                user: admin.id,
-                title: `${username} joins ${webShort}`,
-                content: `Hello Admin, you have successfully created ${full_name} as a new ${role} on the system.`,
-                role: 'admin',
-                URL: '/admin-controls/users',
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
+        if (admins) {
+            admins.map(async ele => {
+                await Notification.create({
+                    user: ele.id,
+                    title: `${username} joins ${webShort}`,
+                    content: `Hello Admin, you have successfully created ${full_name} as a new ${role} on the system.`,
+                    URL: '/admin-controls/users',
+                })
             })
         }
 
@@ -568,16 +573,9 @@ exports.UpdateUsers = async (req, res) => {
             const findAdmin = await User.findOne({ where: { id: req.user } })
             if (!findAdmin) return res.json({ status: 400, msg: `Admin not found` })
             if (password !== findAdmin.password) return res.json({ status: 404, msg: `Incorrect password entered` })
+            if (findAdmin.role !== 'super admin') return res.json({ status: 400, msg: 'Unauthorized action' })
 
-            if (user.role === 'admin') {
-                if (findAdmin.id !== 1) return res.json({ status: 404, msg: `Unauthorized action` })
-            }
-
-            if (user.suspend === 'false') {
-                user.suspend = 'true'
-            } else {
-                user.suspend = 'false'
-            }
+            user.suspend = user.suspend === 'true' ? 'false' : 'true'
         }
 
         await user.save()
@@ -596,6 +594,10 @@ exports.ReactivateUsers = async (req, res) => {
         const user = await User.findOne({ where: { id: user_id } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
         if (user.account_deletion !== 'true') return res.json({ status: 404, msg: `Account is active` })
+
+        const findAdmin = await User.findOne({ where: { id: req.user } })
+        if (!findAdmin) return res.json({ status: 400, msg: `Admin not found` })
+        if (findAdmin.role !== 'super admin') return res.json({ status: 400, msg: 'Unauthorized action' })
 
         user.account_deletion = 'false'
         await user.save()

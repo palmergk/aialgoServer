@@ -6,6 +6,7 @@ const TradingPlans = require('../models').trading_plans
 const User = require('../models').users
 const moment = require('moment')
 const otpGenerator = require('otp-generator')
+const { Op } = require('sequelize')
 
 
 exports.CreateInvestment = async (req, res) => {
@@ -36,7 +37,7 @@ exports.CreateInvestment = async (req, res) => {
 
         const topupTime = moment().add(parseFloat(1), `${tradingPlan.duration_type}`)
         const endDate = moment().add(parseFloat(tradingPlan.duration), `${tradingPlan.duration_type}`)
-        const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        const gen_id = `01` + otpGenerator.generate(8, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const investment = await Investment.create({
             user: req.user,
@@ -55,7 +56,7 @@ exports.CreateInvestment = async (req, res) => {
             URL: '/dashboard/investment',
         })
 
-        const admins = await User.findAll({ where: { role: 'admin' } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
             admins.map(async ele => {
                 await Notification.create({

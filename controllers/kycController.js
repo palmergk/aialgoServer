@@ -5,6 +5,7 @@ const fs = require('fs')
 const moment = require('moment')
 const { webURL } = require('../utils/utils')
 const Mailing = require('../config/emailDesign')
+const { Op } = require('sequelize')
 
 
 
@@ -26,6 +27,7 @@ exports.Create_Update_KYC = async (req, res) => {
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
 
         const filePath = './public/identity'
         const date = new Date()
@@ -68,7 +70,6 @@ exports.Create_Update_KYC = async (req, res) => {
                 URL: '/dashboard/settings/kyc',
             })
 
-            const admins = await User.findAll({ where: { role: 'admin' } })
             if (admins) {
                 admins.map(async ele => {
 
@@ -92,6 +93,7 @@ exports.Create_Update_KYC = async (req, res) => {
             }
         }
         else {
+            if (kyc.status === 'processing') return res.json({ status: 404, msg: `You can't re-upload while KYC details is still processing` })
             if (kyc.status === 'verified') return res.json({ status: 404, msg: 'KYC is verified' })
 
             const image = req?.files?.valid_id
@@ -132,7 +134,6 @@ exports.Create_Update_KYC = async (req, res) => {
                 URL: '/dashboard/settings/kyc',
             })
 
-            const admins = await User.findAll({ where: { role: 'admin' } })
             if (admins) {
                 admins.map(async ele => {
 

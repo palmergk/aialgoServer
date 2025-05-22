@@ -7,6 +7,7 @@ const moment = require('moment')
 const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
 const Mailing = require('../config/emailDesign')
+const { Op } = require('sequelize')
 
 
 exports.MakeWithdrawal = async (req, res) => {
@@ -33,7 +34,7 @@ exports.MakeWithdrawal = async (req, res) => {
         wallet.balance -= amount
         await wallet.save()
 
-        const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        const gen_id = `01` + otpGenerator.generate(8, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
 
         const withdrawal = await Withdrawal.create({
             user: req.user,
@@ -51,7 +52,7 @@ exports.MakeWithdrawal = async (req, res) => {
             URL: '/dashboard/withdraw?screen=2',
         })
 
-        const admins = await User.findAll({ where: { role: 'admin' } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
             admins.map(async ele => {
 

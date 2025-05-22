@@ -13,6 +13,7 @@ const otpGenerator = require('otp-generator')
 const Mailing = require('../config/emailDesign')
 const moment = require('moment')
 const { webName, webShort, webURL } = require('../utils/utils')
+const { Op } = require('sequelize')
 
 
 exports.CreateAccount = async (req, res) => {
@@ -77,7 +78,7 @@ exports.CreateAccount = async (req, res) => {
             })
         }
 
-        const admins = await User.findAll({ where: { role: 'admin' } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
             admins.map(async ele => {
 
@@ -254,7 +255,7 @@ exports.ContactFromUsers = async (req, res) => {
         const { email, subject, message } = req.body
         if (!email || !message) return res.json({ status: 404, msg: `Incomplete request found` })
 
-        const admins = await User.findAll({ where: { role: 'admin' } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
             admins.map(async ele => {
 
@@ -407,7 +408,7 @@ exports.DeleteAcount = async (req, res) => {
         user.account_deletion = 'true'
         await user.save()
 
-        const admins = await User.findAll({ where: { role: 'admin' } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
             admins.map(async ele => {
                 await Notification.create({

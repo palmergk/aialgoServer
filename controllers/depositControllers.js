@@ -8,6 +8,7 @@ const moment = require('moment')
 const fs = require('fs')
 const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
+const { Op } = require('sequelize')
 
 
 exports.CreateDeposit = async (req, res) => {
@@ -39,8 +40,8 @@ exports.CreateDeposit = async (req, res) => {
         const imageName = `${date.getTime()}.jpg`
         await image.mv(`${filePath}/${imageName}`)
 
-        const gen_id = otpGenerator.generate(10, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
-
+        const gen_id = `01` + otpGenerator.generate(8, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        
         const deposit = await Deposit.create({
             user: req.user,
             gen_id,
@@ -58,7 +59,7 @@ exports.CreateDeposit = async (req, res) => {
             URL: '/dashboard/deposit?screen=2',
         })
 
-        const admins = await User.findAll({ where: { role: 'admin' } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
             admins.map(async ele => {
 
