@@ -532,7 +532,7 @@ exports.AdminCreateAccount = async (req, res) => {
 
 exports.UpdateUsers = async (req, res) => {
     try {
-        const { user_id, password, fundAmount, minimumAmount } = req.body
+        const { user_id, password, fundAmount, tag, minimumAmount } = req.body
         if (!user_id) return res.json({ status: 404, msg: `Provide a user id` })
 
         const user = await User.findOne({ where: { id: user_id } })
@@ -540,28 +540,52 @@ exports.UpdateUsers = async (req, res) => {
 
         if (fundAmount) {
             if (isNaN(fundAmount)) return res.json({ status: 404, msg: `Amount must be a number` })
+            if (!tag) return res.json({ status: 404, msg: 'Provide a valid funding tag' })
+            const tagArray = ["fund", "deduct"]
+            if (!tagArray.includes(tag)) return res.json({ status: 404, msg: `Invalid funding tag provided` })
 
             const wallet = await Wallet.findOne({ where: { user: user.id } })
             if (!wallet) return res.json({ status: 404, msg: 'User wallet not found' })
 
-            wallet.balance += fundAmount
+            if (tag === 'fund') {
+                wallet.balance += fundAmount
+
+                await Notification.create({
+                    user: user_id,
+                    title: `wallet funded`,
+                    content: `Your account has been funded with $${fundAmount.toLocaleString()}, check your balance.`,
+                    URL: '/dashboard',
+                })
+
+                await Mailing({
+                    subject: `Wallet Funded`,
+                    eTitle: `Wallet funded`,
+                    eBody: `
+                      <div>Hello ${user.username}, your wallet has been funded with $${fundAmount.toLocaleString()} today ${moment().format('DD-MM-yyyy')} / ${moment().format('h:mm')}. See your current balance <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">here</a></div>
+                    `,
+                    account: user
+                })
+            } else if (tag === 'deduct') {
+                wallet.balance -= fundAmount
+
+                await Notification.create({
+                    user: user_id,
+                    title: `wallet deducted`,
+                    content: `Your wallet has been deducted a sum of $${fundAmount.toLocaleString()} after a technical error occured earlier on our end.`,
+                    URL: '/dashboard',
+                })
+
+                await Mailing({
+                    subject: `Wallet Deducted`,
+                    eTitle: `Wallet deducted`,
+                    eBody: `
+                      <div>Hello ${user.username}, your wallet has been deducted a sum of $${fundAmount.toLocaleString()} today ${moment().format('DD-MM-yyyy')} / ${moment().format('h:mm')}, after a technical error occured earlier on our end. Wrongfully deducted? file a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
+                    `,
+                    account: user
+                })
+            }
+            
             await wallet.save()
-
-            await Notification.create({
-                user: user_id,
-                title: `wallet funded`,
-                content: `Your account has been funded with $${fundAmount.toLocaleString()}, check your balance.`,
-                URL: '/dashboard',
-            })
-
-            await Mailing({
-                subject: `Wallet Funded`,
-                eTitle: `Wallet funded`,
-                eBody: `
-                  <div>Hello ${user.username}, your wallet has been funded with $${fundAmount.toLocaleString()} today ${moment().format('DD-MM-yyyy')} / ${moment().format('h:mm')}. See your current balance <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">here</a></div>
-                `,
-                account: user
-            })
         }
 
         if (minimumAmount) {

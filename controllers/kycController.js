@@ -3,6 +3,8 @@ const User = require('../models').users
 const Kyc = require('../models').kyc
 const fs = require('fs')
 const moment = require('moment')
+const slug = require('slug')
+const otpGenerator = require('otp-generator')
 const { webURL } = require('../utils/utils')
 const Mailing = require('../config/emailDesign')
 const { Op } = require('sequelize')
@@ -22,34 +24,38 @@ exports.UserKYC = async (req, res) => {
 
 exports.Create_Update_KYC = async (req, res) => {
     try {
-        const { first_name, last_name, gender, marital_status, country, country_flag, date_of_birth, address, state, postal, phone_code, phone_number, id_number } = req.body
-        if (!first_name || !last_name || !gender || !marital_status || !country || !country_flag || !date_of_birth || !address || !state || !postal || !phone_code || !phone_number || !id_number) return res.json({ status: 404, msg: `Incomplete request found` })
+        const { full_name, gender, marital_status, country, country_flag, date_of_birth, address, state, postal, phone_code, phone_number, id_number } = req.body
+        if (!full_name || !gender || !marital_status || !country || !country_flag || !date_of_birth || !address || !state || !postal || !phone_code || !phone_number || !id_number) return res.json({ status: 404, msg: `Incomplete request found` })
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
         const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
-
-        const filePath = './public/identity'
-        const date = new Date()
-        let imageName;
-
         const kyc = await Kyc.findOne({ where: { user: req.user } })
-        if (!kyc) {
 
-            if (!req.files) return res.json({ status: 404, msg: `Attach a valid ID` })
-            const image = req.files.valid_id
-            if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
+        const gen_id = `01` + otpGenerator.generate(8, { specialChars: false, lowerCaseAlphabets: false, upperCaseAlphabets: false, })
+        const slugData = slug(user.username, '-')
+        const date = new Date()
+        const filePath = `./public/identity/${kyc ? kyc.gen_id : gen_id}`
+        const frontImageName = `${slugData}_frontID${date.getTime()}.jpg`
+        const backImageName = `${slugData}_backID${date.getTime()}.jpg`
+
+        if (!kyc) {
+            if (!req.files || !req.files.front_id || !req.files.back_id) return res.json({ status: 404, msg: `Attach a valid front and back ID` })
+            const frontImage = req.files.front_id
+            const backImage = req.files.back_id
+            if (!frontImage.mimetype.startsWith('image/') || !backImage.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload valid images format (jpg, jpeg, png, svg)` })
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath, { recursive: true })
             }
-            imageName = `${date.getTime()}.jpg`
-            await image.mv(`${filePath}/${imageName}`)
+            await frontImage.mv(`${filePath}/${frontImageName}`)
+            await backImage.mv(`${filePath}/${backImageName}`)
 
             const kyc = await Kyc.create({
                 user: req.user,
-                valid_id: imageName,
-                first_name,
-                last_name,
+                front_id: frontImageName,
+                back_id: backImageName,
+                gen_id: gen_id,
+                full_name,
                 gender,
                 marital_status,
                 country,
@@ -93,26 +99,37 @@ exports.Create_Update_KYC = async (req, res) => {
             }
         }
         else {
-            if (kyc.status === 'processing') return res.json({ status: 404, msg: `You can't re-upload while KYC details is still processing` })
+            if (kyc.status === 'processing') return res.json({ status: 404, msg: `You can't re-upload while KYC details is processing` })
             if (kyc.status === 'verified') return res.json({ status: 404, msg: 'KYC is verified' })
 
-            const image = req?.files?.valid_id
-            if (image) {
-                if (!image.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
-                const currentImagePath = `${filePath}/${kyc.valid_id}`
+            const frontImage = req?.files?.front_id
+            const backImage = req?.files?.back_id
+            if (frontImage) {
+                if (!frontImage.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
+                const currentImagePath = `${filePath}/${kyc.front_id}`
                 if (fs.existsSync(currentImagePath)) {
                     fs.unlinkSync(currentImagePath)
                 }
                 if (!fs.existsSync(filePath)) {
                     fs.mkdirSync(filePath, { recursive: true })
                 }
-                imageName = `${date.getTime()}.jpg`
-                await image.mv(`${filePath}/${imageName}`)
-                kyc.valid_id = imageName
+                await frontImage.mv(`${filePath}/${frontImageName}`)
+                kyc.front_id = frontImageName
+            }
+            if (backImage) {
+                if (!backImage.mimetype.startsWith('image/')) return res.json({ status: 404, msg: `File error, upload a valid image format (jpg, jpeg, png, svg)` })
+                const currentImagePath = `${filePath}/${kyc.back_id}`
+                if (fs.existsSync(currentImagePath)) {
+                    fs.unlinkSync(currentImagePath)
+                }
+                if (!fs.existsSync(filePath)) {
+                    fs.mkdirSync(filePath, { recursive: true })
+                }
+                await backImage.mv(`${filePath}/${backImageName}`)
+                kyc.back_id = backImageName
             }
 
-            kyc.first_name = first_name
-            kyc.last_name = last_name
+            kyc.full_name = full_name
             kyc.gender = gender
             kyc.marital_status = marital_status
             kyc.country = country

@@ -281,14 +281,23 @@ exports.ContactFromUsers = async (req, res) => {
 
 exports.GetProfile = async (req, res) => {
     try {
-        const user = await User.findByPk(req.user)
-        if (!user) return res.json({ status: 404, msg: `Account not found` })
+        const user = await User.findByPk(req.user);
+        if (!user) return res.json({ status: 404, msg: `Account not found` });
 
-        return res.json({ status: 200, msg: user })
+        const myReferrals = await User.findAll({
+            where: { my_referral: user.referral_id }
+        });
+
+        const details = {
+            ...user.toJSON(),
+            referrals: myReferrals.length
+        };
+
+        return res.json({ status: 200, msg: details });
     } catch (error) {
-        res.json({ status: 500, msg: error.message })
+        res.json({ status: 500, msg: error.message });
     }
-}
+};
 
 exports.UpdateProfile = async (req, res) => {
     try {
@@ -344,12 +353,7 @@ exports.UpdateProfile = async (req, res) => {
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath, { recursive: true })
             }
-            if (username) {
-                imageName = `${slug(username, '-')}.jpg`
-            } else {
-                imageName = `${slug(user.username, '-')}.jpg`
-            }
-
+            imageName = `${slug(username ? username : user.username, '-')}.jpg`
             await image.mv(`${filePath}/${imageName}`)
             user.image = imageName
         }
