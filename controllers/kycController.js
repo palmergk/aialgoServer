@@ -91,7 +91,7 @@ exports.Create_Update_KYC = async (req, res) => {
                         subject: `KYC Submission Alert`,
                         eTitle: `New KYC uploaded`,
                         eBody: `
-                          <div>Hello Admin, ${user.username} just submitted KYC details today ${moment(kyc.createdAt).format('DD-MM-yyyy')} / ${moment(kyc.createdAt).format('h:mm')} verify authenticity <a href='${webURL}/admin-controls/users' style="text-decoration: underline; color: #E96E28">here</a></div>
+                          <div>Hello Admin, ${user.username} just submitted KYC details today ${moment(kyc.createdAt).format('DD-MM-yyyy')} / ${moment(kyc.createdAt).format('h:mma')} verify authenticity <a href='${webURL}/admin-controls/users' style="text-decoration: underline; color: #E96E28">here</a></div>
                         `,
                         account: ele.dataValues
                     })
@@ -166,7 +166,7 @@ exports.Create_Update_KYC = async (req, res) => {
                         subject: `KYC Re-upload Alert`,
                         eTitle: `KYC re-uploaded`,
                         eBody: `
-                          <div>Hello Admin, ${user.username} re-uploaded KYC details today ${moment(kyc.updatedAt).format('DD-MM-yyyy')} / ${moment(kyc.updatedAt).format('h:mm')}  verify authenticity <a href='${webURL}/admin-controls/users' style="text-decoration: underline; color: #E96E28">here</a></div>
+                          <div>Hello Admin, ${user.username} re-uploaded KYC details today ${moment(kyc.updatedAt).format('DD-MM-yyyy')} / ${moment(kyc.updatedAt).format('h:mma')}  verify authenticity <a href='${webURL}/admin-controls/users' style="text-decoration: underline; color: #E96E28">here</a></div>
                         `,
                         account: ele.dataValues
                     })

@@ -79,7 +79,7 @@ exports.UpdateDeposits = async (req, res) => {
                 subject: `Deposit Confirmation`,
                 eTitle: `Deposit confirmed`,
                 eBody: `
-                      <div>Hello ${depositUser.username}, your deposit amount of $${deposit.amount.toLocaleString()} made on ${moment(deposit.createdAt).format('DD-MM-yyyy')} / ${moment(deposit.createdAt).format('h:mm')} has been successfully confirmed. See your current balance <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">here</a></div>
+                      <div>Hello ${depositUser.username}, your deposit amount of $${deposit.amount.toLocaleString()} made on ${moment(deposit.createdAt).format('DD-MM-yyyy')} / ${moment(deposit.createdAt).format('h:mma')} has been successfully confirmed. See your current balance <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
                 account: depositUser
             })
@@ -140,7 +140,7 @@ exports.UpdateDeposits = async (req, res) => {
                 subject: `Deposit Failed`,
                 eTitle: `Deposit failed`,
                 eBody: `
-                      <div>Hello ${depositUser.username}, your deposit amount of $${deposit.amount.toLocaleString()} made on ${moment(deposit.createdAt).format('DD-MM-yyyy')} / ${moment(deposit.createdAt).format('h:mm')} confirmation failed, this deposit was not confirmed. Did you make this deposit? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
+                      <div>Hello ${depositUser.username}, your deposit amount of $${deposit.amount.toLocaleString()} made on ${moment(deposit.createdAt).format('DD-MM-yyyy')} / ${moment(deposit.createdAt).format('h:mma')} confirmation failed, this deposit was not confirmed. Did you make this deposit? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
                 account: depositUser
             })
@@ -200,7 +200,7 @@ exports.UpdateInvestments = async (req, res) => {
                     subject: `Investment Profit Completed`,
                     eTitle: `Investment profit completed`,
                     eBody: `
-                      <div>Hello ${investmentUser.username}, your investment of $${investment.amount.toLocaleString()} ${investment.trading_plan} plan made on ${moment(investment.createdAt).format('DD-MM-yyyy')} / ${moment(investment.createdAt).format('h:mm')} profit generation is completed. You can see total profit generated and claim to your wallet <a href='${webURL}/dashboard/investment' style="text-decoration: underline; color: #E96E28">here</a></div>
+                      <div>Hello ${investmentUser.username}, your investment of $${investment.amount.toLocaleString()} ${investment.trading_plan} plan made on ${moment(investment.createdAt).format('DD-MM-yyyy')} / ${moment(investment.createdAt).format('h:mma')} profit generation is completed. You can see total profit generated and claim to your wallet <a href='${webURL}/dashboard/investment' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
                     account: investmentUser
                 })
@@ -273,7 +273,7 @@ exports.UpdateWithdrawals = async (req, res) => {
                     subject: `Withdrawal Confirmation`,
                     eTitle: `Withdrawal confirmed`,
                     eBody: `
-                      <div>Hello ${withdrawalUser.username}, your withdrawal of $${withdrawal.amount.toLocaleString()} made on ${moment(withdrawal.createdAt).format('DD-MM-yyyy')} / ${moment(withdrawal.createdAt).format('h:mm')} for wallet address ${withdrawal.withdrawal_address} has been confirmed.</div>
+                      <div>Hello ${withdrawalUser.username}, your withdrawal of $${withdrawal.amount.toLocaleString()} made on ${moment(withdrawal.createdAt).format('DD-MM-yyyy')} / ${moment(withdrawal.createdAt).format('h:mma')} for wallet address ${withdrawal.withdrawal_address} has been confirmed.</div>
                     `,
                     account: withdrawalUser
                 })
@@ -285,6 +285,8 @@ exports.UpdateWithdrawals = async (req, res) => {
         }
 
         if (message) {
+            withdrawal.generate += 1
+            await withdrawal.save()
 
             await Notification.create({
                 user: withdrawal.user,
@@ -343,7 +345,7 @@ exports.UpdateTaxes = async (req, res) => {
         const taxPayer = await User.findOne({ where: { id: tax.user } })
         if (!taxPayer) return res.json({ status: 400, msg: 'Tax Payer not found' })
 
-        if (tax.status !== 'processing') return res.json({ status: 400, msg: 'Tax payment already updated' })
+        if (tax.status !== 'pending') return res.json({ status: 400, msg: 'Tax payment already updated' })
 
         if (status === 'confirmed') {
 
@@ -358,7 +360,7 @@ exports.UpdateTaxes = async (req, res) => {
                 subject: `Tax Payment Confirmation`,
                 eTitle: `Tax payment confirmed`,
                 eBody: `
-                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} has been confirmed and the tax cleared.</div>
+                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mma')} has been confirmed and the tax cleared.</div>
                     `,
                 account: taxPayer
             })
@@ -379,7 +381,7 @@ exports.UpdateTaxes = async (req, res) => {
                 subject: `Tax Payment Failed`,
                 eTitle: `Tax payment failed`,
                 eBody: `
-                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mm')} confirmation failed. This payment was not confirmed. Did you make this payment? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
+                      <div>Hello ${taxPayer.username}, your tax payment amount of $${tax.amount.toLocaleString()} made on ${moment(tax.createdAt).format('DD-MM-yyyy')} / ${moment(tax.createdAt).format('h:mma')} confirmation failed. This payment was not confirmed. Did you make this payment? File a complaint <a href='${webURL}/dashboard/feedback' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
                 account: taxPayer
             })
@@ -584,7 +586,7 @@ exports.UpdateUsers = async (req, res) => {
                     account: user
                 })
             }
-            
+
             await wallet.save()
         }
 
@@ -1129,7 +1131,7 @@ cron.schedule('* * * * *', async () => {
                         subject: `Investment Profit Completed`,
                         eTitle: `Investment profit completed`,
                         eBody: `
-                              <div>Hello ${investmentUser.username}, your investment of $${ele.amount.toLocaleString()} ${ele.trading_plan} plan made on ${moment(ele.createdAt).format('DD-MM-yyyy')} / ${moment(ele.createdAt).format('h:mm')} profit generation is completed. You can see total profit generated and claim to your wallet <a href='${webURL}/dashboard/investment' style="text-decoration: underline; color: #E96E28">here</a></div>
+                              <div>Hello ${investmentUser.username}, your investment of $${ele.amount.toLocaleString()} ${ele.trading_plan} plan made on ${moment(ele.createdAt).format('DD-MM-yyyy')} / ${moment(ele.createdAt).format('h:mma')} profit generation is completed. You can see total profit generated and claim to your wallet <a href='${webURL}/dashboard/investment' style="text-decoration: underline; color: #E96E28">here</a></div>
                             `,
                         account: investmentUser
                     })

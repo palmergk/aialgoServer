@@ -93,7 +93,7 @@ exports.CreateAccount = async (req, res) => {
                     subject: 'New User Alert',
                     eTitle: `New user joins ${webShort}`,
                     eBody: `
-                     <div>Hello admin, you have a new user as ${user.username} joins ${webName} today ${moment(user.createdAt).format('DD-MM-yyyy')} / ${moment(user.createdAt).format('h:mm')}.</div> 
+                     <div>Hello admin, you have a new user as ${user.username} joins ${webName} today ${moment(user.createdAt).format('DD-MM-yyyy')} / ${moment(user.createdAt).format('h:mma')}.</div> 
                     `,
                     account: ele.dataValues,
                 })
@@ -426,7 +426,7 @@ exports.DeleteAcount = async (req, res) => {
                     subject: 'User Deletes Account',
                     eTitle: `User leaves ${webShort}`,
                     eBody: `
-                     <div>Hello admin, ${user.username} leaves ${webName} as trader deletes account today ${moment().format('DD-MM-yyyy')} / ${moment().format('h:mm')}.</div> 
+                     <div>Hello admin, ${user.username} leaves ${webName} as trader deletes account today ${moment().format('DD-MM-yyyy')} / ${moment().format('h:mma')}.</div> 
                     `,
                     account: ele.dataValues,
                 })

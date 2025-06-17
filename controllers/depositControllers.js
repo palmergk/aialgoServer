@@ -81,7 +81,7 @@ exports.CreateDeposit = async (req, res) => {
                      <div style="font-size: 0.85rem; margin-top: 0.5rem"><span style="font-style: italic">sender:</span><span style="padding-left: 1rem">${user.username}</span></div>
                      <div style="font-size: 0.85rem; margin-top: 0.5rem"><span style="font-style: italic">email:</span><span style="padding-left: 1rem">${user.email}</span></div>
                      <div style="font-size: 0.85rem; margin-top: 0.5rem"><span style="font-style: italic">date:</span><span style="padding-left: 1rem">${moment(deposit.createdAt).format('DD-MM-yyyy')}</span></div>
-                     <div style="font-size: 0.85rem; margin-top: 0.5rem"><span style="font-style: italic">time:</span><span style="padding-left: 1rem">${moment(deposit.createdAt).format('h:mm')}</span></div>
+                     <div style="font-size: 0.85rem; margin-top: 0.5rem"><span style="font-style: italic">time:</span><span style="padding-left: 1rem">${moment(deposit.createdAt).format('h:mma')}</span></div>
                      <div style="margin-top: 1rem">Deposit confirmed? Update transaction status <a href='${webURL}/admin-controls' style="text-decoration: underline; color: #E96E28">here</a></div>
                     `,
                     account: ele.dataValues,

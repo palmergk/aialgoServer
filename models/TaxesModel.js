@@ -7,6 +7,6 @@ module.exports = (sequelize, DataTypes) => {
         network: { type: DataTypes.STRING },
         deposit_address: { type: DataTypes.STRING },
         payment_proof: { type: DataTypes.STRING },
-        status: { type: DataTypes.STRING, defaultValue: 'processing' },
+        status: { type: DataTypes.STRING, defaultValue: 'pending' },
     })
 }
