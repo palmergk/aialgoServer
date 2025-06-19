@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
         deposit_minimum: { type: DataTypes.FLOAT, defaultValue: 100 },
         facebook: { type: DataTypes.STRING, defaultValue: 'https://' },
         instagram: { type: DataTypes.STRING, defaultValue: 'https://' },
+        twitter: { type: DataTypes.STRING, defaultValue: 'https://' },
         telegram: { type: DataTypes.STRING, defaultValue: 'https://' },
     })
 }

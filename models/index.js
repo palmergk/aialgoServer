@@ -1,10 +1,11 @@
 const { Sequelize, DataTypes } = require("sequelize");
 require('dotenv').config()
 
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-    host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT
-});
+const isproduction = process.env.NODE_ENV === 'production'
+const sequelize = new Sequelize(isproduction ? process.env.DB_NAME : 'aiweb', isproduction ? process.env.DB_USER : 'root', isproduction ? process.env.DB_PASSWORD : '', {
+    host: isproduction ? process.env.DB_HOST : 'localhost',
+    dialect: isproduction ? process.env.DB_DIALECT : 'mysql'
+})
 
 sequelize.authenticate()
     .then(() => { console.log(`Db connected`) })
@@ -48,6 +49,6 @@ db.wallets.belongsTo(db.users, { foreignKey: 'user', as: 'walletUser' })
 db.taxes.belongsTo(db.users, { foreignKey: 'user', as: 'taxPayer' })
 db.kyc.belongsTo(db.users, { foreignKey: 'user', as: 'kycUser' })
 
-db.sequelize.sync({ force: false }).then(() => console.log('Tables synced'))
-.catch((error) => console.log(error))
+db.sequelize.sync({ force: false }).then(() => console.log(`Connection has been established successfully on ${isproduction ? 'online db' : 'local db'}`))
+    .catch((error) => console.log(error))
 module.exports = db

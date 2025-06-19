@@ -511,7 +511,7 @@ exports.AdminCreateAccount = async (req, res) => {
                 await Notification.create({
                     user: ele.id,
                     title: `${username} joins ${webShort}`,
-                    content: `Hello Admin, you have successfully created ${full_name} as a new ${role} on the system.`,
+                    content: `Hello Admin, you have successfully created ${full_name} as a new ${role} on the platform.`,
                     URL: '/admin-controls/users',
                 })
             })

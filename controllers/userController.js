@@ -65,18 +65,16 @@ exports.CreateAccount = async (req, res) => {
             my_referral: referral_code ? referral_code : null
         })
 
-        if (user.id !== 1) {
-            await Wallet.create({
-                user: user.id
-            })
+        await Wallet.create({
+            user: user.id
+        })
 
-            await Notification.create({
-                user: user.id,
-                title: `welcome ${username}`,
-                content: `Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first deposit.`,
-                URL: '/dashboard/deposit',
-            })
-        }
+        await Notification.create({
+            user: user.id,
+            title: `welcome ${username}`,
+            content: `Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first deposit.`,
+            URL: '/dashboard/deposit',
+        })
 
         const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
         if (admins) {
@@ -85,7 +83,7 @@ exports.CreateAccount = async (req, res) => {
                 await Notification.create({
                     user: ele.id,
                     title: `${user.username} joins ${webShort}`,
-                    content: `Hello Admin, you have a new user as ${user.username} joins the system.`,
+                    content: `Hello Admin, you have a new user as ${user.username} joins the platform.`,
                     URL: '/admin-controls/users',
                 })
 
@@ -301,7 +299,7 @@ exports.GetProfile = async (req, res) => {
 
 exports.UpdateProfile = async (req, res) => {
     try {
-        const { full_name, username, email, old_password, new_password, facebook, instagram, telegram } = req.body
+        const { full_name, username, email, old_password, new_password, facebook, instagram, twitter, telegram } = req.body
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'Account not found' })
@@ -368,6 +366,9 @@ exports.UpdateProfile = async (req, res) => {
             }
             if (instagram) {
                 adminStore.instagram = instagram
+            }
+            if (twitter) {
+                adminStore.twitter = twitter
             }
             if (telegram) {
                 adminStore.telegram = telegram
