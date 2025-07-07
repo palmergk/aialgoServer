@@ -24,8 +24,8 @@ exports.UserKYC = async (req, res) => {
 
 exports.Create_Update_KYC = async (req, res) => {
     try {
-        const { full_name, gender, marital_status, country, country_flag, date_of_birth, address, state, postal, phone_code, phone_number, id_number } = req.body
-        if (!full_name || !gender || !marital_status || !country || !country_flag || !date_of_birth || !address || !state || !postal || !phone_code || !phone_number || !id_number) return res.json({ status: 404, msg: `Incomplete request found` })
+        const { first_name, last_name, gender, marital_status, date_of_birth, country, country_flag, address, state, postal, phone_code, phone_number, id_type, id_number } = req.body
+        if (!first_name || !last_name || !gender || !marital_status || !date_of_birth || !country || !country_flag || !address || !state || !postal || !phone_code || !phone_number || !id_type || !id_number) return res.json({ status: 404, msg: `Incomplete request found` })
 
         const user = await User.findOne({ where: { id: req.user } })
         if (!user) return res.json({ status: 404, msg: 'User not found' })
@@ -55,17 +55,19 @@ exports.Create_Update_KYC = async (req, res) => {
                 front_id: frontImageName,
                 back_id: backImageName,
                 gen_id: gen_id,
-                full_name,
+                first_name,
+                last_name,
                 gender,
                 marital_status,
+                date_of_birth,
                 country,
                 country_flag,
-                date_of_birth,
                 address,
                 state,
                 postal,
                 phone_code,
                 phone_number,
+                id_type,
                 id_number
             })
 
@@ -129,18 +131,20 @@ exports.Create_Update_KYC = async (req, res) => {
                 kyc.back_id = backImageName
             }
 
-            kyc.full_name = full_name
+            kyc.first_name = first_name
+            kyc.last_name = last_name
             kyc.gender = gender
             kyc.marital_status = marital_status
+            kyc.date_of_birth = date_of_birth
             kyc.country = country
             kyc.country_flag = country_flag,
-                kyc.phone_code = phone_code
-            kyc.postal = postal
-            kyc.phone_number = phone_number
+                kyc.address = address
             kyc.state = state
-            kyc.address = address
+            kyc.postal = postal
+            kyc.phone_code = phone_code
+            kyc.phone_number = phone_number
+            kyc.id_type = id_type
             kyc.id_number = id_number
-            kyc.date_of_birth = date_of_birth
             kyc.status = 'processing'
             await kyc.save()
 

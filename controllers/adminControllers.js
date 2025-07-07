@@ -448,7 +448,7 @@ exports.AdminCreateAccount = async (req, res) => {
 
         if (role === 'user') {
 
-            const user = await User.create({
+            const newUser = await User.create({
                 full_name,
                 username,
                 email,
@@ -460,26 +460,27 @@ exports.AdminCreateAccount = async (req, res) => {
             })
 
             await Wallet.create({
-                user: user.id
+                user: newUser.id
             })
 
             await Notification.create({
-                user: user.id,
-                title: `welcome ${user.username}`,
+                user: newUser.id,
+                title: `welcome ${newUser.username}`,
                 content: `Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first deposit.`,
                 URL: '/dashboard/deposit',
             })
 
             await Mailing({
                 subject: `Welcome To ${webShort}`,
-                eTitle: `Welcome ${user.username}`,
+                eTitle: `Welcome ${newUser.username}`,
                 eBody: `
                  <div>Welcome to ${webName} where we focus on making cryptocurrency trading easy. Get started by making your first <a href='${webURL}/dashboard/deposit' style="text-decoration: underline; color: #E96E28">deposit</a></div>
                 `,
-                account: user,
+                account: newUser,
             })
         }
 
+        let newAdminID;
         if (role === 'admin') {
             const findAdmin = await User.findOne({ where: { id: req.user } })
             if (!findAdmin) return res.json({ status: 400, msg: 'Admin not found' })
@@ -496,22 +497,32 @@ exports.AdminCreateAccount = async (req, res) => {
                 referral_id: myReferralId,
                 role: role
             })
+            newAdminID = newAdmin.id
 
             await Notification.create({
                 user: newAdmin.id,
                 title: `welcome ${newAdmin.username}`,
-                content: `Welcome to ${webName} admin, take the first step by getting to know users`,
+                content: `Welcome to ${webName} admin, take the first step by getting to know users.`,
                 URL: '/admin-controls/users',
+            })
+
+            await Mailing({
+                subject: `Welcome To ${webShort}`,
+                eTitle: `Welcome ${newAdmin.username}`,
+                eBody: `
+                 <div>Welcome to ${webName} admin, take the first step by getting to know users <a href='${webURL}/admin-controls/users' style="text-decoration: underline; color: #E96E28">here</a></div>
+                `,
+                account: newAdmin,
             })
         }
 
-        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] } } })
+        const admins = await User.findAll({ where: { role: { [Op.in]: ['admin', 'super admin'] }, id: { [Op.ne]: newAdminID } } })
         if (admins) {
             admins.map(async ele => {
                 await Notification.create({
                     user: ele.id,
                     title: `${username} joins ${webShort}`,
-                    content: `Hello Admin, you have successfully created ${full_name} as a new ${role} on the platform.`,
+                    content: `Hello Admin, ${full_name} has successfully been created as a new ${role} on the platform.`,
                     URL: '/admin-controls/users',
                 })
             })
